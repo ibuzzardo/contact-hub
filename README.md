@@ -1,5 +1,8 @@
 # ContactHub - Sales CRM
 
+> Built with [Dark Factory v4](https://github.com/ibuzzardo/dark-factory-v4) — autonomous AI software development pipeline
+
+
 A modern, responsive CRM application built with Next.js 15, TypeScript, and Tailwind CSS.
 
 ## Features
