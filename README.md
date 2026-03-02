@@ -5,6 +5,10 @@
 
 A modern, responsive CRM application built with Next.js 15, TypeScript, and Tailwind CSS.
 
+
+![contact-hub screenshot](docs/screenshot.png)
+
+
 ## Features
 
 - **Contact Management**: Add, edit, and organize contacts with groups and favorites
