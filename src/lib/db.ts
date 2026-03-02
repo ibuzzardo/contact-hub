@@ -1,57 +1,71 @@
 import Database from 'better-sqlite3';
 import path from 'path';
-import fs from 'fs';
 
-const dbPath = process.env.DATABASE_PATH || './data/contacts.db';
-const dbDir = path.dirname(dbPath);
+const dbPath = path.join(process.cwd(), 'contacts.db');
+const db = new Database(dbPath);
 
-// Ensure data directory exists
-if (!fs.existsSync(dbDir)) {
-  fs.mkdirSync(dbDir, { recursive: true });
-}
+// Enable foreign keys
+db.pragma('foreign_keys = ON');
 
-let db: Database.Database | null = null;
-
-export function getDb(): Database.Database {
-  if (!db) {
-    db = new Database(dbPath);
-    initializeTables();
-  }
-  return db;
-}
-
-function initializeTables(): void {
-  const db = getDb();
-  
+export function initializeTables(): void {
   // Create groups table
   db.exec(`
     CREATE TABLE IF NOT EXISTS groups (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
-  
+
   // Create contacts table
   db.exec(`
     CREATE TABLE IF NOT EXISTS contacts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
-      email TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
       phone TEXT,
       company TEXT,
       group_id INTEGER,
       notes TEXT,
-      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (group_id) REFERENCES groups (id)
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (group_id) REFERENCES groups (id) ON DELETE SET NULL
     )
+  `);
+
+  // Add new columns with try/catch to handle existing databases
+  try {
+    db.exec('ALTER TABLE contacts ADD COLUMN job_title TEXT');
+  } catch (e) {
+    // Column already exists
+  }
+
+  try {
+    db.exec('ALTER TABLE contacts ADD COLUMN favorite INTEGER DEFAULT 0');
+  } catch (e) {
+    // Column already exists
+  }
+
+  // Create trigger to update updated_at timestamp
+  db.exec(`
+    CREATE TRIGGER IF NOT EXISTS update_contacts_timestamp 
+    AFTER UPDATE ON contacts
+    BEGIN
+      UPDATE contacts SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+    END
+  `);
+
+  db.exec(`
+    CREATE TRIGGER IF NOT EXISTS update_groups_timestamp 
+    AFTER UPDATE ON groups
+    BEGIN
+      UPDATE groups SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+    END
   `);
 }
 
-export function closeDb(): void {
-  if (db) {
-    db.close();
-    db = null;
-  }
-}
+// Initialize tables on import
+initializeTables();
+
+export default db;

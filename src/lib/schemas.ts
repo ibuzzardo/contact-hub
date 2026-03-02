@@ -5,8 +5,10 @@ export const createContactSchema = z.object({
   email: z.string().email('Invalid email format'),
   phone: z.string().max(20, 'Phone must be 20 characters or less').optional(),
   company: z.string().max(100, 'Company must be 100 characters or less').optional(),
+  job_title: z.string().max(100, 'Job title must be 100 characters or less').optional(),
   group_id: z.number().int().positive().optional(),
   notes: z.string().max(500, 'Notes must be 500 characters or less').optional(),
+  favorite: z.number().int().min(0).max(1).optional().default(0),
 });
 
 export const updateContactSchema = createContactSchema.partial();

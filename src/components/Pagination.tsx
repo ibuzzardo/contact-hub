@@ -1,10 +1,12 @@
 interface PaginationProps {
   currentPage: number;
   totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
   onPageChange: (page: number) => void;
 }
 
-export default function Pagination({ currentPage, totalPages, onPageChange }: PaginationProps): JSX.Element {
+export default function Pagination({ currentPage, totalPages, totalItems, itemsPerPage, onPageChange }: PaginationProps): JSX.Element {
   if (totalPages <= 1) return <div></div>;
 
   const pages = [];
@@ -21,61 +23,70 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
     pages.push(i);
   }
 
+  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+
   return (
-    <div className="flex items-center justify-center space-x-2 mt-8">
-      <button
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Previous
-      </button>
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-8">
+      <p className="text-sm text-text-muted">
+        Showing {startItem} to {endItem} of {totalItems} results
+      </p>
       
-      {startPage > 1 && (
-        <>
-          <button
-            onClick={() => onPageChange(1)}
-            className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-          >
-            1
-          </button>
-          {startPage > 2 && <span className="px-2 text-gray-500">...</span>}
-        </>
-      )}
-      
-      {pages.map((page) => (
+      <div className="flex items-center space-x-2">
         <button
-          key={page}
-          onClick={() => onPageChange(page)}
-          className={`px-3 py-2 text-sm font-medium rounded-md ${
-            page === currentPage
-              ? 'text-white bg-primary border border-primary'
-              : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-          }`}
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="px-3 py-2 text-sm font-medium text-text-muted bg-surface-light border border-border-light rounded-lg hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {page}
+          Previous
         </button>
-      ))}
-      
-      {endPage < totalPages && (
-        <>
-          {endPage < totalPages - 1 && <span className="px-2 text-gray-500">...</span>}
+        
+        {startPage > 1 && (
+          <>
+            <button
+              onClick={() => onPageChange(1)}
+              className="px-3 py-2 text-sm font-medium text-text-main bg-surface-light border border-border-light rounded-lg hover:bg-slate-100 transition-colors"
+            >
+              1
+            </button>
+            {startPage > 2 && <span className="px-2 text-text-muted">...</span>}
+          </>
+        )}
+        
+        {pages.map((page) => (
           <button
-            onClick={() => onPageChange(totalPages)}
-            className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+            key={page}
+            onClick={() => onPageChange(page)}
+            className={`px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+              page === currentPage
+                ? 'text-white bg-primary border border-primary shadow-sm shadow-primary/30'
+                : 'text-text-main bg-surface-light border border-border-light hover:bg-slate-100'
+            }`}
           >
-            {totalPages}
+            {page}
           </button>
-        </>
-      )}
-      
-      <button
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Next
-      </button>
+        ))}
+        
+        {endPage < totalPages && (
+          <>
+            {endPage < totalPages - 1 && <span className="px-2 text-text-muted">...</span>}
+            <button
+              onClick={() => onPageChange(totalPages)}
+              className="px-3 py-2 text-sm font-medium text-text-main bg-surface-light border border-border-light rounded-lg hover:bg-slate-100 transition-colors"
+            >
+              {totalPages}
+            </button>
+          </>
+        )}
+        
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          className="px-3 py-2 text-sm font-medium text-text-muted bg-surface-light border border-border-light rounded-lg hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }

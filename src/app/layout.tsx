@@ -14,10 +14,14 @@ export default function RootLayout({
 }): JSX.Element {
   return (
     <html lang="en">
-      <body>
+      <head>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+      </head>
+      <body className="font-sans">
         <div className="flex h-screen">
           <Sidebar />
-          <main className="flex-1 overflow-auto md:ml-64">
+          <main className="flex-1 md:ml-64 min-h-screen flex flex-col bg-background-light overflow-auto">
             {children}
           </main>
         </div>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getDb } from '@/lib/db';
+import db from '@/lib/db';
 import { updateContactSchema } from '@/lib/schemas';
-import { Contact } from '@/types';
+import { Contact, Group } from '@/types';
 
 interface RouteParams {
   params: Promise<{ id: string }>;
@@ -11,25 +11,34 @@ export async function GET(request: NextRequest, { params }: RouteParams): Promis
   try {
     const { id } = await params;
     const contactId = parseInt(id);
-    
+
     if (isNaN(contactId)) {
       return NextResponse.json(
         { error: 'Invalid contact ID' },
         { status: 400 }
       );
     }
-    
-    const db = getDb();
-    const contact = db.prepare('SELECT * FROM contacts WHERE id = ?').get(contactId) as Contact | undefined;
-    
+
+    const contact = db.prepare(
+      'SELECT id, name, email, phone, company, job_title, group_id, notes, favorite, created_at, updated_at FROM contacts WHERE id = ?'
+    ).get(contactId) as Contact | undefined;
+
     if (!contact) {
       return NextResponse.json(
         { error: 'Contact not found' },
         { status: 404 }
       );
     }
-    
-    return NextResponse.json(contact);
+
+    // Get group information if contact has a group
+    let group: Group | undefined;
+    if (contact.group_id) {
+      group = db.prepare(
+        'SELECT * FROM groups WHERE id = ?'
+      ).get(contact.group_id) as Group | undefined;
+    }
+
+    return NextResponse.json({ contact, group });
   } catch (error) {
     console.error('Error fetching contact:', error);
     return NextResponse.json(
@@ -43,95 +52,80 @@ export async function PUT(request: NextRequest, { params }: RouteParams): Promis
   try {
     const { id } = await params;
     const contactId = parseInt(id);
-    
+
     if (isNaN(contactId)) {
       return NextResponse.json(
         { error: 'Invalid contact ID' },
         { status: 400 }
       );
     }
-    
+
     const body = await request.json();
     const validatedData = updateContactSchema.parse(body);
-    
-    const db = getDb();
-    
+
     // Check if contact exists
-    const existingContact = db.prepare('SELECT * FROM contacts WHERE id = ?').get(contactId) as Contact | undefined;
+    const existingContact = db.prepare(
+      'SELECT id FROM contacts WHERE id = ?'
+    ).get(contactId);
+
     if (!existingContact) {
       return NextResponse.json(
         { error: 'Contact not found' },
         { status: 404 }
       );
     }
-    
-    // Check if group exists if group_id is provided
-    if (validatedData.group_id) {
-      const group = db.prepare('SELECT id FROM groups WHERE id = ?').get(validatedData.group_id);
-      if (!group) {
-        return NextResponse.json(
-          { error: 'Group not found' },
-          { status: 400 }
-        );
-      }
-    }
-    
-    // Build update query dynamically
+
+    // Build dynamic update query
     const updateFields = [];
     const updateValues = [];
     
-    if (validatedData.name !== undefined) {
-      updateFields.push('name = ?');
-      updateValues.push(validatedData.name);
+    for (const [key, value] of Object.entries(validatedData)) {
+      if (value !== undefined) {
+        updateFields.push(`${key} = ?`);
+        updateValues.push(value);
+      }
     }
-    if (validatedData.email !== undefined) {
-      updateFields.push('email = ?');
-      updateValues.push(validatedData.email);
+
+    if (updateFields.length === 0) {
+      return NextResponse.json(
+        { error: 'No fields to update' },
+        { status: 400 }
+      );
     }
-    if (validatedData.phone !== undefined) {
-      updateFields.push('phone = ?');
-      updateValues.push(validatedData.phone || null);
-    }
-    if (validatedData.company !== undefined) {
-      updateFields.push('company = ?');
-      updateValues.push(validatedData.company || null);
-    }
-    if (validatedData.group_id !== undefined) {
-      updateFields.push('group_id = ?');
-      updateValues.push(validatedData.group_id || null);
-    }
-    if (validatedData.notes !== undefined) {
-      updateFields.push('notes = ?');
-      updateValues.push(validatedData.notes || null);
-    }
-    
-    updateFields.push('updated_at = CURRENT_TIMESTAMP');
+
     updateValues.push(contactId);
     
-    const stmt = db.prepare(`
+    const updateQuery = `
       UPDATE contacts 
-      SET ${updateFields.join(', ')}
+      SET ${updateFields.join(', ')}, updated_at = CURRENT_TIMESTAMP 
       WHERE id = ?
-    `);
-    
-    stmt.run(...updateValues);
-    
-    const updatedContact = db.prepare('SELECT * FROM contacts WHERE id = ?').get(contactId) as Contact;
-    
+    `;
+
+    db.prepare(updateQuery).run(...updateValues);
+
+    // Return updated contact
+    const updatedContact = db.prepare(
+      'SELECT id, name, email, phone, company, job_title, group_id, notes, favorite, created_at, updated_at FROM contacts WHERE id = ?'
+    ).get(contactId) as Contact;
+
     return NextResponse.json(updatedContact);
   } catch (error: any) {
     console.error('Error updating contact:', error);
     
     if (error.name === 'ZodError') {
       return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: error.errors,
-        },
+        { error: 'Validation failed', details: error.errors },
         { status: 400 }
       );
     }
     
+    if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+      return NextResponse.json(
+        { error: 'A contact with this email already exists' },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Failed to update contact' },
       { status: 500 }
@@ -143,28 +137,23 @@ export async function DELETE(request: NextRequest, { params }: RouteParams): Pro
   try {
     const { id } = await params;
     const contactId = parseInt(id);
-    
+
     if (isNaN(contactId)) {
       return NextResponse.json(
         { error: 'Invalid contact ID' },
         { status: 400 }
       );
     }
-    
-    const db = getDb();
-    
-    // Check if contact exists
-    const contact = db.prepare('SELECT * FROM contacts WHERE id = ?').get(contactId) as Contact | undefined;
-    if (!contact) {
+
+    const result = db.prepare('DELETE FROM contacts WHERE id = ?').run(contactId);
+
+    if (result.changes === 0) {
       return NextResponse.json(
         { error: 'Contact not found' },
         { status: 404 }
       );
     }
-    
-    const stmt = db.prepare('DELETE FROM contacts WHERE id = ?');
-    stmt.run(contactId);
-    
+
     return NextResponse.json({ message: 'Contact deleted successfully' });
   } catch (error) {
     console.error('Error deleting contact:', error);

@@ -4,34 +4,27 @@
 
 @layer base {
   * {
-    border-color: #e5e7eb;
+    @apply border-border;
   }
-  
   body {
-    font-family: Inter, system-ui, sans-serif;
-    background-color: #f9fafb;
-    color: #111827;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 }
 
 @layer components {
-  .btn-primary {
-    @apply px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 focus:ring-2 focus:ring-primary/50 transition-colors;
+  .material-symbols-outlined {
+    font-variation-settings:
+      'FILL' 0,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24;
   }
   
-  .btn-secondary {
-    @apply px-4 py-2 bg-secondary text-white rounded-lg font-medium hover:bg-secondary/90 focus:ring-2 focus:ring-secondary/50 transition-colors;
-  }
-  
-  .btn-destructive {
-    @apply px-4 py-2 bg-destructive text-white rounded-lg font-medium hover:bg-destructive/90 focus:ring-2 focus:ring-destructive/50 transition-colors;
-  }
-  
-  .card {
-    @apply bg-foreground shadow-md rounded-lg p-4;
-  }
-  
-  .input {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary;
+  .material-symbols-outlined.fill-current {
+    font-variation-settings:
+      'FILL' 1,
+      'wght' 400,
+      'GRAD' 0,
+      'opsz' 24;
   }
 }

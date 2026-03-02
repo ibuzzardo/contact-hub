@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 interface DeleteContactButtonProps {
   contactId: number;
@@ -10,12 +11,12 @@ interface DeleteContactButtonProps {
 
 export default function DeleteContactButton({ contactId, contactName }: DeleteContactButtonProps): JSX.Element {
   const router = useRouter();
-  const [isDeleting, setIsDeleting] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async (): Promise<void> => {
-    setIsDeleting(true);
     try {
+      setIsDeleting(true);
       const response = await fetch(`/api/contacts/${contactId}`, {
         method: 'DELETE',
       });
@@ -33,32 +34,27 @@ export default function DeleteContactButton({ contactId, contactName }: DeleteCo
     }
   };
 
-  if (showConfirm) {
-    return (
-      <div className="flex gap-2">
-        <button
-          onClick={handleDelete}
-          disabled={isDeleting}
-          className="btn-destructive disabled:opacity-50"
-        >
-          {isDeleting ? 'Deleting...' : 'Confirm Delete'}
-        </button>
-        <button
-          onClick={() => setShowConfirm(false)}
-          className="btn-secondary"
-        >
-          Cancel
-        </button>
-      </div>
-    );
-  }
-
   return (
-    <button
-      onClick={() => setShowConfirm(true)}
-      className="btn-destructive"
-    >
-      Delete
-    </button>
+    <>
+      <button
+        onClick={() => setShowConfirm(true)}
+        disabled={isDeleting}
+        className="text-red-600 hover:bg-red-50 border border-red-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
+      >
+        <span className="material-symbols-outlined text-base mr-2">delete</span>
+        {isDeleting ? 'Deleting...' : 'Delete'}
+      </button>
+
+      <ConfirmDialog
+        isOpen={showConfirm}
+        onClose={() => setShowConfirm(false)}
+        onConfirm={handleDelete}
+        title="Delete Contact"
+        message={`Are you sure you want to delete ${contactName}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDestructive={true}
+      />
+    </>
   );
 }
