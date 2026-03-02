@@ -1,41 +1,42 @@
-# ContactHub
+# ContactHub - Sales CRM
 
-A modern, full-stack contact management application built with Next.js 15, TypeScript, and SQLite.
+A modern, full-featured Customer Relationship Management (CRM) system built with Next.js 15, TypeScript, and SQLite. ContactHub helps you manage contacts, companies, deals, activities, and tasks all in one place.
 
 ## Features
 
-### Core Functionality
-- **Contact Management**: Create, read, update, and delete contacts
-- **Group Organization**: Organize contacts into custom groups
-- **Favorites**: Mark important contacts as favorites
-- **Search & Filter**: Find contacts by name, email, or company
-- **Sorting**: Sort contacts by name, date, or company
+### Core CRM Functionality
+- **Contacts Management**: Full CRUD operations with favorites, job titles, and company associations
+- **Companies**: Track business accounts with industry, website, and contact relationships
+- **Deals Pipeline**: Kanban-style deal management with stages, values, and probability tracking
+- **Activities**: Log calls, emails, meetings, and notes with automatic stage change tracking
+- **Tasks**: Create and manage follow-ups with priority levels and due dates
+- **Dashboard**: Comprehensive CRM overview with metrics, recent activities, and pipeline visualization
 
 ### Data Management
-- **CSV Import**: Bulk import contacts from CSV files
-- **CSV Export**: Export all contacts to CSV format
-- **Data Validation**: Comprehensive input validation with Zod
+- **Groups**: Organize contacts into custom groups
+- **CSV Import/Export**: Bulk contact operations
+- **Search & Filtering**: Find contacts, companies, and deals quickly
+- **Pagination**: Handle large datasets efficiently
 
 ### User Experience
-- **Responsive Design**: Mobile-first approach with Tailwind CSS
-- **Modern UI**: Professional CRM-style interface with Material Symbols icons
-- **Real-time Updates**: Optimistic UI updates for better user experience
-- **Dashboard**: Overview with statistics and recent activity
+- **Responsive Design**: Mobile-first approach with breakpoints at 320px, 768px, and 1280px
+- **Modern UI**: Clean interface using Tailwind CSS and Material Symbols icons
+- **Real-time Updates**: Instant feedback on all operations
+- **Sidebar Navigation**: Easy access to all CRM modules
 
 ## Tech Stack
 
 - **Framework**: Next.js 15 with App Router
 - **Language**: TypeScript (strict mode)
 - **Database**: SQLite with better-sqlite3
-- **Styling**: Tailwind CSS with custom design system
-- **Validation**: Zod for schema validation
-- **Icons**: Google Material Symbols
-- **Font**: Inter from Google Fonts
+- **Styling**: Tailwind CSS
+- **Validation**: Zod schemas
+- **Icons**: Google Material Symbols Outlined
+- **Font**: Inter
 
 ## Getting Started
 
 ### Prerequisites
-
 - Node.js 18+ 
 - npm
 
@@ -43,7 +44,7 @@ A modern, full-stack contact management application built with Next.js 15, TypeS
 
 1. Clone the repository:
 ```bash
-git clone <repository-url>
+git clone https://github.com/ibuzzardo/contact-hub.git
 cd contact-hub
 ```
 
@@ -52,9 +53,9 @@ cd contact-hub
 npm install
 ```
 
-3. Create environment file:
+3. Set up environment variables:
 ```bash
-cp .env.example .env.local
+cp .env.example .env
 ```
 
 4. Start the development server:
@@ -64,121 +65,139 @@ npm run dev
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Building for Production
+### Database Setup
 
-```bash
-npm run build
-npm start
-```
+The SQLite database is automatically initialized on first run. The database file (`contacts.db`) will be created in the project root.
+
+## API Endpoints
+
+### Contacts
+- `GET /api/contacts` - List contacts with search, filter, and pagination
+- `POST /api/contacts` - Create new contact
+- `GET /api/contacts/[id]` - Get contact details
+- `PUT /api/contacts/[id]` - Update contact
+- `DELETE /api/contacts/[id]` - Delete contact
+- `PATCH /api/contacts/[id]/favorite` - Toggle favorite status
+
+### Companies
+- `GET /api/companies` - List companies with computed metrics
+- `POST /api/companies` - Create new company
+- `GET /api/companies/[id]` - Get company details
+- `PUT /api/companies/[id]` - Update company
+- `DELETE /api/companies/[id]` - Delete company
+
+### Deals
+- `GET /api/deals` - List deals with stage filtering
+- `POST /api/deals` - Create new deal with tags
+- `GET /api/deals/[id]` - Get deal details
+- `PUT /api/deals/[id]` - Update deal and tags
+- `DELETE /api/deals/[id]` - Delete deal
+- `PATCH /api/deals/[id]/stage` - Update deal stage (creates activity)
+
+### Activities
+- `GET /api/activities` - List activities with filtering
+- `POST /api/activities` - Create new activity
+
+### Tasks
+- `GET /api/tasks` - List tasks with status filtering
+- `POST /api/tasks` - Create new task
+- `PUT /api/tasks/[id]` - Update task
+- `DELETE /api/tasks/[id]` - Delete task
+- `PATCH /api/tasks/[id]/complete` - Toggle task completion
+
+### Groups
+- `GET /api/groups` - List all groups
+- `POST /api/groups` - Create new group
+- `PUT /api/groups/[id]` - Update group
+- `DELETE /api/groups/[id]` - Delete group
+
+### Dashboard
+- `GET /api/stats` - Get CRM dashboard statistics
 
 ## Project Structure
 
 ```
 src/
-├── app/                    # Next.js App Router pages
-│   ├── api/               # API routes
-│   ├── contacts/          # Contact pages
-│   ├── groups/            # Groups page
-│   ├── favorites/         # Favorites page
-│   ├── settings/          # Settings page
-│   └── layout.tsx         # Root layout
-├── components/            # Reusable UI components
-├── lib/                   # Utilities and database
-└── types/                 # TypeScript type definitions
+├── app/
+│   ├── api/                 # API routes
+│   ├── companies/           # Company pages
+│   ├── contacts/            # Contact pages
+│   ├── deals/               # Deal pipeline
+│   ├── favorites/           # Favorites page
+│   ├── groups/              # Groups management
+│   ├── settings/            # Settings page
+│   ├── layout.tsx           # Root layout
+│   └── page.tsx             # Dashboard
+├── components/              # Reusable components
+├── lib/
+│   ├── db.ts               # Database setup
+│   ├── schemas.ts          # Zod validation schemas
+│   └── utils.ts            # Utility functions
+└── types/
+    └── index.ts            # TypeScript interfaces
 ```
-
-## API Endpoints
-
-### Contacts
-- `GET /api/contacts` - List contacts with pagination, search, and filters
-- `POST /api/contacts` - Create a new contact
-- `GET /api/contacts/[id]` - Get contact details
-- `PUT /api/contacts/[id]` - Update contact
-- `DELETE /api/contacts/[id]` - Delete contact
-- `PATCH /api/contacts/[id]/favorite` - Toggle favorite status
-- `GET /api/contacts/export` - Export contacts as CSV
-- `POST /api/contacts/import` - Import contacts from CSV
-
-### Groups
-- `GET /api/groups` - List all groups
-- `POST /api/groups` - Create a new group
-- `GET /api/groups/[id]` - Get group details
-- `DELETE /api/groups/[id]` - Delete group
-
-### Statistics
-- `GET /api/stats` - Get dashboard statistics
-
-## Database Schema
-
-### Contacts Table
-- `id` - Primary key
-- `name` - Contact name (required)
-- `email` - Email address (required, unique)
-- `phone` - Phone number (optional)
-- `company` - Company name (optional)
-- `job_title` - Job title (optional)
-- `group_id` - Foreign key to groups table (optional)
-- `notes` - Additional notes (optional)
-- `favorite` - Favorite flag (0 or 1)
-- `created_at` - Creation timestamp
-- `updated_at` - Last update timestamp
-
-### Groups Table
-- `id` - Primary key
-- `name` - Group name (required, unique)
-- `created_at` - Creation timestamp
-- `updated_at` - Last update timestamp
-
-## Features in Detail
-
-### Dashboard
-- Welcome message with time-based greeting
-- Statistics cards showing total contacts, groups, favorites, and new contacts this week
-- Recent contacts table with quick actions
-- Quick access to import and add contact functions
-
-### Contact Management
-- Grid and list view modes
-- Advanced search across name, email, and company fields
-- Filter by group and favorite status
-- Sort by name (A-Z, Z-A), date (newest, oldest), and company
-- Colored avatar initials based on contact name
-- Favorite toggle with optimistic updates
-
-### CSV Import/Export
-- Import contacts from CSV with validation and error reporting
-- Export all contacts to CSV with proper formatting
-- Sample CSV template download
-- Support for all contact fields including groups
-
-### Responsive Design
-- Mobile-first approach with breakpoints at 320px, 768px, and 1280px
-- Collapsible sidebar on mobile devices
-- Responsive grid layouts that adapt to screen size
-- Touch-friendly interface elements
 
 ## Development
 
-### Code Quality
-- TypeScript strict mode enabled
-- Comprehensive error handling with try/catch blocks
-- Zod validation for all API inputs
-- Consistent code formatting and naming conventions
+### Available Scripts
 
-### Performance
-- Server-side rendering where appropriate
-- Optimistic UI updates for better user experience
-- Efficient database queries with proper indexing
-- Image optimization and lazy loading
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run start` - Start production server
+- `npm run lint` - Run ESLint
+- `npm run typecheck` - Run TypeScript compiler check
+
+### Code Quality
+
+- **TypeScript**: Strict mode enabled, no `any` types allowed
+- **ESLint**: Next.js recommended configuration
+- **File Naming**: kebab-case for files, PascalCase for components
+- **Path Aliases**: Use `@/` instead of relative imports
+- **Error Handling**: All async functions have try/catch blocks
+
+### Database Schema
+
+The application uses SQLite with the following main tables:
+- `contacts` - Contact information with company associations
+- `companies` - Business account details
+- `deals` - Sales opportunities with stages and values
+- `deal_tags` - Tags associated with deals
+- `activities` - Interaction history
+- `tasks` - Follow-up items and reminders
+- `groups` - Contact organization
+
+## Deployment
+
+### Build for Production
+
+```bash
+npm run build
+npm run start
+```
+
+### Environment Variables
+
+Required environment variables:
+- `NEXT_PUBLIC_BASE_URL` - Base URL for API calls (default: http://localhost:3000)
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch: `git checkout -b feature/new-feature`
 3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+4. Run tests: `npm run typecheck && npm run lint`
+5. Commit your changes: `git commit -am 'Add new feature'`
+6. Push to the branch: `git push origin feature/new-feature`
+7. Submit a pull request
 
 ## License
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+For support, please open an issue on GitHub or contact the development team.
+
+---
+
+**ContactHub** - Streamline your sales process with modern CRM tools.
