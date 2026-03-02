@@ -1,10 +1,14 @@
+import { getGroupBadgeColor } from '@/lib/utils';
+
 interface GroupBadgeProps {
   name: string;
 }
 
 export default function GroupBadge({ name }: GroupBadgeProps): JSX.Element {
+  const { bg, text, border } = getGroupBadgeColor(name);
+  
   return (
-    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent text-white">
+    <span className={`px-2.5 py-1 rounded-md ${bg} ${text} text-xs font-medium border ${border}`}>
       {name}
     </span>
   );

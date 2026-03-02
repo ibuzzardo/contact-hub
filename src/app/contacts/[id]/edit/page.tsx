@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Contact } from '@/types';
+import Header from '@/components/Header';
 import ContactForm from '@/components/ContactForm';
 import LoadingSpinner from '@/components/LoadingSpinner';
 
@@ -15,44 +17,37 @@ export default function EditContactPage({ params }: EditContactPageProps): JSX.E
   const [contact, setContact] = useState<Contact | null>(null);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
   const [contactId, setContactId] = useState<string>('');
 
   useEffect(() => {
     const getParams = async (): Promise<void> => {
-      const resolvedParams = await params;
-      setContactId(resolvedParams.id);
+      const { id } = await params;
+      setContactId(id);
+      fetchContact(id);
     };
     getParams();
   }, [params]);
 
-  useEffect(() => {
-    if (contactId) {
-      fetchContact();
-    }
-  }, [contactId]);
-
-  const fetchContact = async (): Promise<void> => {
+  const fetchContact = async (id: string): Promise<void> => {
     try {
-      const response = await fetch(`/api/contacts/${contactId}`);
+      const response = await fetch(`/api/contacts/${id}`);
       if (response.ok) {
         const data = await response.json();
-        setContact(data);
+        setContact(data.contact);
       } else {
-        setError('Contact not found');
+        router.push('/contacts');
       }
     } catch (error) {
-      setError('Failed to load contact');
+      console.error('Failed to fetch contact:', error);
+      router.push('/contacts');
     } finally {
       setLoading(false);
     }
   };
 
   const handleSubmit = async (data: any): Promise<void> => {
-    setIsSubmitting(true);
-    setError('');
-    
     try {
+      setIsSubmitting(true);
       const response = await fetch(`/api/contacts/${contactId}`, {
         method: 'PUT',
         headers: {
@@ -64,19 +59,12 @@ export default function EditContactPage({ params }: EditContactPageProps): JSX.E
       if (response.ok) {
         router.push(`/contacts/${contactId}`);
       } else {
-        const errorData = await response.json();
-        if (response.status === 400 && errorData.details) {
-          throw errorData;
-        } else {
-          setError(errorData.error || 'Failed to update contact');
-        }
-      }
-    } catch (error: any) {
-      if (error.details) {
+        const error = await response.json();
         throw error;
-      } else {
-        setError('Failed to update contact');
       }
+    } catch (error) {
+      console.error('Failed to update contact:', error);
+      throw error;
     } finally {
       setIsSubmitting(false);
     }
@@ -88,51 +76,46 @@ export default function EditContactPage({ params }: EditContactPageProps): JSX.E
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="flex-1">
+        <Header title="Edit Contact" />
         <LoadingSpinner />
       </div>
     );
   }
 
-  if (error && !contact) {
+  if (!contact) {
     return (
-      <div className="p-6">
-        <div className="max-w-2xl mx-auto">
-          <div className="card text-center py-8">
-            <p className="text-red-600 mb-4">{error}</p>
-            <button onClick={() => router.push('/contacts')} className="btn-primary">
-              Back to Contacts
-            </button>
-          </div>
+      <div className="flex-1">
+        <Header title="Contact Not Found" />
+        <div className="p-6">
+          <p className="text-text-muted">The contact you're looking for doesn't exist.</p>
+          <Link href="/contacts" className="text-primary hover:text-primary-dark font-medium">
+            Back to Contacts
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6">
-      <div className="max-w-2xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Contact</h1>
-          <p className="text-gray-600">Update contact information</p>
-        </div>
+    <div className="flex-1">
+      <Header title="Edit Contact" subtitle={`Update ${contact.name}'s information`}>
+        <Link
+          href={`/contacts/${contactId}`}
+          className="flex items-center gap-2 px-4 py-2 text-text-muted hover:bg-slate-100 rounded-lg transition-colors"
+        >
+          <span className="material-symbols-outlined text-base">arrow_back</span>
+          Back to Contact
+        </Link>
+      </Header>
 
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800">{error}</p>
-          </div>
-        )}
-
-        <div className="card">
-          {contact && (
-            <ContactForm
-              contact={contact}
-              onSubmit={handleSubmit}
-              onCancel={handleCancel}
-              isLoading={isSubmitting}
-            />
-          )}
-        </div>
+      <div className="p-6">
+        <ContactForm
+          contact={contact}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+          isLoading={isSubmitting}
+        />
       </div>
     </div>
   );
