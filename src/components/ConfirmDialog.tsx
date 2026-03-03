@@ -1,7 +1,5 @@
 'use client';
 
-import { useState } from 'react';
-
 interface ConfirmDialogProps {
   isOpen: boolean;
   onClose: () => void;

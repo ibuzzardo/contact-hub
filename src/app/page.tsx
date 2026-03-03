@@ -105,237 +105,191 @@ export default function Dashboard(): JSX.Element {
       <Header 
         title={`${greeting}, Ian`}
         subtitle="Here's what's happening with your sales pipeline today."
-      >
-        <Link
-          href="/settings"
-          className="flex items-center gap-2 px-4 py-2 text-text-muted hover:bg-slate-100 rounded-lg transition-colors border border-border-light"
-        >
-          <span className="material-symbols-outlined text-base">upload_file</span>
-          Import
-        </Link>
-        <Link
-          href="/contacts/new"
-          className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm shadow-primary/30"
-        >
-          <span className="material-symbols-outlined text-base">add</span>
-          Add Contact
-        </Link>
-      </Header>
-
-      <div className="p-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
+      />
+      
+      <div className="p-6 space-y-8">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="bg-surface-light rounded-xl border border-border-light p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-text-muted text-sm font-medium">Total Contacts</p>
+                <p className="text-3xl font-bold text-text-main mt-2">{stats.totalContacts.toLocaleString()}</p>
+              </div>
+              <div className="w-12 h-12 bg-[#E64626] rounded-lg flex items-center justify-center">
                 <span className="material-symbols-outlined text-white text-xl">group</span>
               </div>
-              <div>
-                <div className="text-xs uppercase text-text-muted font-medium">Contacts</div>
-                <div className="text-2xl font-bold text-text-main">{stats.totalContacts}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded-full font-medium">+5.2%</span>
             </div>
           </div>
-
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-indigo-500 flex items-center justify-center">
+          
+          <div className="bg-surface-light rounded-xl border border-border-light p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-text-muted text-sm font-medium">Companies</p>
+                <p className="text-3xl font-bold text-text-main mt-2">{stats.totalCompanies.toLocaleString()}</p>
+              </div>
+              <div className="w-12 h-12 bg-[#A83420] rounded-lg flex items-center justify-center">
                 <span className="material-symbols-outlined text-white text-xl">domain</span>
               </div>
-              <div>
-                <div className="text-xs uppercase text-text-muted font-medium">Companies</div>
-                <div className="text-2xl font-bold text-text-main">{stats.totalCompanies}</div>
-              </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded-full font-medium">+2.1%</span>
             </div>
           </div>
-
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-amber-500 flex items-center justify-center">
-                <span className="material-symbols-outlined text-white text-xl">folder_open</span>
-              </div>
+          
+          <div className="bg-surface-light rounded-xl border border-border-light p-6">
+            <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs uppercase text-text-muted font-medium">Open Deals</div>
-                <div className="text-2xl font-bold text-text-main">{stats.openDeals}</div>
+                <p className="text-text-muted text-sm font-medium">Open Deals</p>
+                <p className="text-3xl font-bold text-text-main mt-2">{stats.openDeals.toLocaleString()}</p>
               </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded-full font-medium">+12.5%</span>
+              <div className="w-12 h-12 bg-[#C63E24] rounded-lg flex items-center justify-center">
+                <span className="material-symbols-outlined text-white text-xl">handshake</span>
+              </div>
             </div>
           </div>
-
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-violet-500 flex items-center justify-center">
-                <span className="material-symbols-outlined text-white text-xl">attach_money</span>
-              </div>
+          
+          <div className="bg-surface-light rounded-xl border border-border-light p-6">
+            <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs uppercase text-text-muted font-medium">Pipeline Value</div>
-                <div className="text-2xl font-bold text-text-main">{formatCurrency(stats.pipelineValue)}</div>
+                <p className="text-text-muted text-sm font-medium">Pipeline Value</p>
+                <p className="text-3xl font-bold text-text-main mt-2">{formatCurrency(stats.pipelineValue)}</p>
               </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded-full font-medium">+8.3%</span>
+              <div className="w-12 h-12 bg-[#D85038] rounded-lg flex items-center justify-center">
+                <span className="material-symbols-outlined text-white text-xl">trending_up</span>
+              </div>
             </div>
           </div>
-
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center">
-                <span className="material-symbols-outlined text-white text-xl">trophy</span>
-              </div>
+          
+          <div className="bg-surface-light rounded-xl border border-border-light p-6">
+            <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs uppercase text-text-muted font-medium">Won This Month</div>
-                <div className="text-2xl font-bold text-text-main">{formatCurrency(stats.wonThisMonth)}</div>
+                <p className="text-text-muted text-sm font-medium">Won This Month</p>
+                <p className="text-3xl font-bold text-text-main mt-2">{formatCurrency(stats.wonThisMonth)}</p>
               </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded-full font-medium">+15.7%</span>
+              <div className="w-12 h-12 bg-emerald-500 rounded-lg flex items-center justify-center">
+                <span className="material-symbols-outlined text-white text-xl">paid</span>
+              </div>
             </div>
           </div>
-
-          <div className="bg-white rounded-xl border border-slate-200 p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 rounded-lg bg-rose-500 flex items-center justify-center">
-                <span className="material-symbols-outlined text-white text-xl">event_available</span>
-              </div>
+          
+          <div className="bg-surface-light rounded-xl border border-border-light p-6">
+            <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs uppercase text-text-muted font-medium">Activities</div>
-                <div className="text-2xl font-bold text-text-main">{stats.activitiesThisWeek}</div>
+                <p className="text-text-muted text-sm font-medium">Activities This Week</p>
+                <p className="text-3xl font-bold text-text-main mt-2">{stats.activitiesThisWeek.toLocaleString()}</p>
               </div>
-            </div>
-            <div className="flex items-center gap-1">
-              <span className="bg-emerald-100 text-emerald-700 text-xs px-2 py-1 rounded-full font-medium">+3.2%</span>
+              <div className="w-12 h-12 bg-[#E06848] rounded-lg flex items-center justify-center">
+                <span className="material-symbols-outlined text-white text-xl">forum</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Recent Activities */}
-          <div className="bg-white rounded-xl border border-slate-200">
-            <div className="p-6 border-b border-slate-200">
-              <h2 className="text-xl font-bold text-text-main">Recent Activities</h2>
-            </div>
-            <div className="p-6">
-              {stats.recentActivities.length > 0 ? (
-                <div className="space-y-4">
-                  {stats.recentActivities.map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-3">
-                      <div className={`w-8 h-8 rounded-full ${getActivityIconColor(activity.type)} flex items-center justify-center flex-shrink-0`}>
-                        <span className="material-symbols-outlined text-white text-sm">{getActivityIcon(activity.type)}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-text-main font-medium">{activity.subject}</p>
-                        <div className="flex items-center gap-2 text-xs text-text-muted mt-1">
-                          {activity.contact_name && <span>{activity.contact_name}</span>}
-                          {activity.deal_name && <span>• {activity.deal_name}</span>}
-                          <span>• {getRelativeTime(activity.activity_date)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">timeline</span>
-                  <div className="text-text-muted">No recent activities</div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Upcoming Follow-ups */}
-          <div className="bg-white rounded-xl border border-slate-200">
-            <div className="p-6 border-b border-slate-200">
-              <h2 className="text-xl font-bold text-text-main">Upcoming Follow-ups</h2>
-            </div>
-            <div className="p-6">
-              {stats.upcomingTasks.length > 0 ? (
-                <div className="space-y-4">
-                  {stats.upcomingTasks.map((task) => (
-                    <div key={task.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-2 h-2 rounded-full ${getPriorityColor(task.priority)}`}></div>
-                        <div>
-                          <div className="text-sm font-medium text-text-main">{task.title}</div>
-                          <div className="flex items-center gap-2 text-xs text-text-muted">
-                            {task.contact_name && (
-                              <div className="flex items-center gap-1">
-                                <Avatar name={task.contact_name} size="sm" />
-                                <span>{task.contact_name}</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {task.due_date && (
-                          <span className={`text-xs ${
-                            isOverdue(task.due_date) ? 'text-red-600 font-medium' : 'text-text-muted'
-                          }`}>
-                            {new Date(task.due_date).toLocaleDateString()}
-                          </span>
-                        )}
-                        <button className="text-green-600 hover:text-green-700">
-                          <span className="material-symbols-outlined text-base">check_circle</span>
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">check_box</span>
-                  <div className="text-text-muted">No upcoming tasks</div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Deals by Stage Chart */}
-        <div className="bg-white rounded-xl border border-slate-200">
-          <div className="p-6 border-b border-slate-200">
-            <h2 className="text-xl font-bold text-text-main">Deals by Stage</h2>
-          </div>
-          <div className="p-6">
-            {stats.dealsByStage.length > 0 ? (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {stats.dealsByStage.map((stage) => {
-                  const heightPercentage = maxStageValue > 0 ? (stage.value / maxStageValue) * 100 : 0;
-                  return (
-                    <div key={stage.stage} className="text-center">
-                      <div className="mb-2">
-                        <div className="text-sm font-medium text-text-main mb-1">{stage.count} deals</div>
-                        <div className="h-32 bg-slate-100 rounded-lg flex items-end justify-center p-2">
-                          <div 
-                            className="w-full bg-primary rounded transition-all duration-300"
-                            style={{ height: `${Math.max(heightPercentage, 5)}%` }}
-                          ></div>
-                        </div>
-                      </div>
-                      <div className="text-xs text-text-muted uppercase font-medium">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Pipeline Chart */}
+          <div className="bg-surface-light rounded-xl border border-border-light p-6">
+            <h3 className="text-lg font-semibold text-text-main mb-6">Deals by Stage</h3>
+            <div className="space-y-4">
+              {stats.dealsByStage.map((stage) => {
+                const percentage = (stage.value / maxStageValue) * 100;
+                return (
+                  <div key={stage.stage} className="space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-text-main capitalize">
                         {stage.stage.replace('_', ' ')}
-                      </div>
-                      <div className="text-sm font-bold text-text-main">
+                      </span>
+                      <span className="text-sm text-text-muted">
                         {formatCurrency(stage.value)}
-                      </div>
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
+                    <div className="w-full bg-slate-200 rounded-full h-2">
+                      <div 
+                        className="bg-primary h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Recent Activities */}
+          <div className="bg-surface-light rounded-xl border border-border-light p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-text-main">Recent Activities</h3>
+              <Link 
+                href="/activities" 
+                className="text-primary hover:text-primary-dark text-sm font-medium transition-colors"
+              >
+                View all
+              </Link>
+            </div>
+            <div className="space-y-4">
+              {stats.recentActivities.length === 0 ? (
+                <p className="text-text-muted text-center py-8">No recent activities</p>
+              ) : (
+                stats.recentActivities.slice(0, 5).map((activity) => (
+                  <div key={activity.id} className="flex items-start gap-3">
+                    <div className={`w-8 h-8 rounded-full ${getActivityIconColor(activity.type)} flex items-center justify-center flex-shrink-0`}>
+                      <span className="material-symbols-outlined text-white text-sm">
+                        {getActivityIcon(activity.type)}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-text-main truncate">
+                        {activity.subject}
+                      </p>
+                      <p className="text-xs text-text-muted">
+                        {activity.contact_name} • {getRelativeTime(activity.activity_date)}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Upcoming Tasks */}
+        <div className="bg-surface-light rounded-xl border border-border-light p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-text-main">Upcoming Tasks</h3>
+            <Link 
+              href="/tasks" 
+              className="text-primary hover:text-primary-dark text-sm font-medium transition-colors"
+            >
+              View all
+            </Link>
+          </div>
+          <div className="space-y-4">
+            {stats.upcomingTasks.length === 0 ? (
+              <p className="text-text-muted text-center py-8">No upcoming tasks</p>
             ) : (
-              <div className="text-center py-8">
-                <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">bar_chart</span>
-                <div className="text-text-muted">No deals data available</div>
-              </div>
+              stats.upcomingTasks.slice(0, 5).map((task) => (
+                <div key={task.id} className="flex items-center gap-4 p-4 border border-border-light rounded-lg">
+                  <div className={`w-3 h-3 rounded-full ${getPriorityColor(task.priority)} flex-shrink-0`} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-text-main truncate">
+                      {task.title}
+                    </p>
+                    <p className="text-xs text-text-muted">
+                      {task.contact_name && `${task.contact_name} • `}
+                      Due {getRelativeTime(task.due_date)}
+                      {isOverdue(task.due_date) && (
+                        <span className="text-red-500 font-medium ml-1">(Overdue)</span>
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                      task.priority === 'high' ? 'bg-red-100 text-red-700' :
+                      task.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                      'bg-green-100 text-green-700'
+                    }`}>
+                      {task.priority}
+                    </span>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </div>

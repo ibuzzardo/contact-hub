@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import Header from '@/components/Header';
 import ContactForm from '@/components/ContactForm';
 
@@ -15,20 +14,19 @@ export default function NewContactPage(): JSX.Element {
       setIsLoading(true);
       const response = await fetch('/api/contacts', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
       });
 
       if (response.ok) {
-        router.push('/contacts');
+        const contact = await response.json();
+        router.push(`/contacts/${contact.id}`);
       } else {
         const error = await response.json();
         throw error;
       }
     } catch (error) {
-      console.error('Failed to create contact:', error);
+      console.error('Error creating contact:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -41,18 +39,13 @@ export default function NewContactPage(): JSX.Element {
 
   return (
     <div className="flex-1">
-      <Header title="Add New Contact" subtitle="Fill in the details below to create a new contact.">
-        <Link
-          href="/contacts"
-          className="flex items-center gap-2 px-4 py-2 text-text-muted hover:bg-slate-100 rounded-lg transition-colors"
-        >
-          <span className="material-symbols-outlined text-base">arrow_back</span>
-          Back to Contacts
-        </Link>
-      </Header>
-
+      <Header 
+        title="Add New Contact" 
+        subtitle="Create a new contact in your CRM"
+      />
+      
       <div className="p-6">
-        <ContactForm
+        <ContactForm 
           onSubmit={handleSubmit}
           onCancel={handleCancel}
           isLoading={isLoading}

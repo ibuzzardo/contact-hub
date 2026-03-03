@@ -1,229 +1,295 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import Header from '@/components/Header';
-import ConfirmDialog from '@/components/ConfirmDialog';
 
 export default function SettingsPage(): JSX.Element {
-  const [isImporting, setIsImporting] = useState(false);
-  const [isExporting, setIsExporting] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [importResult, setImportResult] = useState<{ imported: number; errors: string[] } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileSelect = (): void => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>): Promise<void> => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (!file.name.endsWith('.csv')) {
-      alert('Please select a CSV file');
-      return;
+  const [settings, setSettings] = useState({
+    notifications: {
+      email: true,
+      push: false,
+      desktop: true
+    },
+    preferences: {
+      theme: 'light',
+      language: 'en',
+      timezone: 'UTC',
+      dateFormat: 'MM/DD/YYYY'
+    },
+    privacy: {
+      profileVisible: true,
+      activityTracking: true,
+      dataSharing: false
     }
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState('');
 
-    try {
-      setIsImporting(true);
-      setImportResult(null);
-      
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      const response = await fetch('/api/contacts/import', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        setImportResult(result);
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Failed to import contacts');
+  const handleNotificationChange = (key: string, value: boolean): void => {
+    setSettings(prev => ({
+      ...prev,
+      notifications: {
+        ...prev.notifications,
+        [key]: value
       }
-    } catch (error) {
-      console.error('Import failed:', error);
-      alert('Failed to import contacts');
-    } finally {
-      setIsImporting(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+    }));
+  };
+
+  const handlePreferenceChange = (key: string, value: string): void => {
+    setSettings(prev => ({
+      ...prev,
+      preferences: {
+        ...prev.preferences,
+        [key]: value
       }
-    }
+    }));
   };
 
-  const handleExport = async (): Promise<void> => {
-    try {
-      setIsExporting(true);
-      
-      const response = await fetch('/api/contacts/export');
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'contacts.csv';
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      } else {
-        alert('Failed to export contacts');
+  const handlePrivacyChange = (key: string, value: boolean): void => {
+    setSettings(prev => ({
+      ...prev,
+      privacy: {
+        ...prev.privacy,
+        [key]: value
       }
-    } catch (error) {
-      console.error('Export failed:', error);
-      alert('Failed to export contacts');
-    } finally {
-      setIsExporting(false);
-    }
+    }));
   };
 
-  const handleDeleteAll = async (): Promise<void> => {
+  const handleSave = async (): Promise<void> => {
     try {
-      setIsDeleting(true);
-      
-      // This would need to be implemented as an API endpoint
-      // For now, just close the dialog
-      alert('Delete all functionality would be implemented here');
+      setIsSaving(true);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setSaveMessage('Settings saved successfully!');
+      setTimeout(() => setSaveMessage(''), 3000);
     } catch (error) {
-      console.error('Delete failed:', error);
-      alert('Failed to delete contacts');
+      setSaveMessage('Error saving settings. Please try again.');
+      setTimeout(() => setSaveMessage(''), 3000);
     } finally {
-      setIsDeleting(false);
-      setShowDeleteConfirm(false);
+      setIsSaving(false);
     }
-  };
-
-  const downloadSampleCSV = (): void => {
-    const csvContent = 'name,email,phone,company,job_title,group,notes\nJohn Doe,john@example.com,555-0123,Acme Corp,Manager,Customer,Sample contact';
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'sample-contacts.csv';
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(a);
   };
 
   return (
     <div className="flex-1">
       <Header 
         title="Settings" 
-        subtitle="Manage your ContactHub preferences and data"
+        subtitle="Manage your account preferences and privacy settings"
+        action={
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className="material-symbols-outlined text-sm">
+              {isSaving ? 'sync' : 'save'}
+            </span>
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </button>
+        }
       />
+      
+      <div className="p-6 space-y-8">
+        {/* Save Message */}
+        {saveMessage && (
+          <div className={`p-4 rounded-lg ${saveMessage.includes('Error') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}>
+            {saveMessage}
+          </div>
+        )}
 
-      <div className="p-6 max-w-4xl">
-        {/* Tab-like header */}
-        <div className="border-b border-border-light mb-8">
-          <div className="flex space-x-8">
-            <button className="py-2 px-1 border-b-2 border-primary text-primary font-medium text-sm">
-              Data Management
-            </button>
+        {/* Notifications */}
+        <div className="bg-surface-light rounded-xl border border-border-light p-6">
+          <h3 className="text-lg font-semibold text-text-main mb-6">Notifications</h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-text-main">Email Notifications</p>
+                <p className="text-sm text-text-muted">Receive notifications via email</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.notifications.email}
+                  onChange={(e) => handleNotificationChange('email', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-text-main">Push Notifications</p>
+                <p className="text-sm text-text-muted">Receive push notifications on your device</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.notifications.push}
+                  onChange={(e) => handleNotificationChange('push', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-text-main">Desktop Notifications</p>
+                <p className="text-sm text-text-muted">Show desktop notifications when app is open</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.notifications.desktop}
+                  onChange={(e) => handleNotificationChange('desktop', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
           </div>
         </div>
 
-        <div className="space-y-8">
-          {/* Import Section */}
-          <div className="bg-surface-light rounded-xl border border-border-light p-6">
-            <h2 className="text-lg font-semibold text-text-main mb-4">Import Contacts</h2>
-            <p className="text-text-muted mb-6">Upload a CSV file to import multiple contacts at once.</p>
-            
-            <div 
-              onClick={handleFileSelect}
-              className="border-2 border-dashed border-border-light rounded-xl p-8 text-center hover:border-primary hover:bg-primary/5 transition-all cursor-pointer"
-            >
-              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-                <span className="material-symbols-outlined text-slate-400 text-xl">upload_file</span>
-              </div>
-              <p className="text-text-main font-medium mb-1">
-                {isImporting ? 'Importing...' : 'Upload a file or drag and drop'}
-              </p>
-              <p className="text-text-muted text-sm">CSV up to 10MB</p>
-            </div>
-            
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".csv"
-              onChange={handleFileChange}
-              className="hidden"
-              disabled={isImporting}
-            />
-            
-            <div className="flex justify-between items-center mt-4">
-              <button
-                onClick={downloadSampleCSV}
-                className="text-primary hover:text-primary-dark text-sm font-medium"
+        {/* Preferences */}
+        <div className="bg-surface-light rounded-xl border border-border-light p-6">
+          <h3 className="text-lg font-semibold text-text-main mb-6">Preferences</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-medium text-text-main mb-2">
+                Theme
+              </label>
+              <select
+                value={settings.preferences.theme}
+                onChange={(e) => handlePreferenceChange('theme', e.target.value)}
+                className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
               >
-                Download sample CSV template
-              </button>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+                <option value="system">System</option>
+              </select>
             </div>
             
-            {importResult && (
-              <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                <p className="text-green-800 font-medium">
-                  Successfully imported {importResult.imported} contacts
-                </p>
-                {importResult.errors.length > 0 && (
-                  <div className="mt-2">
-                    <p className="text-orange-700 text-sm font-medium">Errors:</p>
-                    <ul className="text-orange-600 text-sm mt-1">
-                      {importResult.errors.map((error, index) => (
-                        <li key={index}>• {error}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+            <div>
+              <label className="block text-sm font-medium text-text-main mb-2">
+                Language
+              </label>
+              <select
+                value={settings.preferences.language}
+                onChange={(e) => handlePreferenceChange('language', e.target.value)}
+                className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+              >
+                <option value="en">English</option>
+                <option value="es">Spanish</option>
+                <option value="fr">French</option>
+                <option value="de">German</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-text-main mb-2">
+                Timezone
+              </label>
+              <select
+                value={settings.preferences.timezone}
+                onChange={(e) => handlePreferenceChange('timezone', e.target.value)}
+                className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+              >
+                <option value="UTC">UTC</option>
+                <option value="America/New_York">Eastern Time</option>
+                <option value="America/Chicago">Central Time</option>
+                <option value="America/Denver">Mountain Time</option>
+                <option value="America/Los_Angeles">Pacific Time</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-text-main mb-2">
+                Date Format
+              </label>
+              <select
+                value={settings.preferences.dateFormat}
+                onChange={(e) => handlePreferenceChange('dateFormat', e.target.value)}
+                className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+              >
+                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Privacy */}
+        <div className="bg-surface-light rounded-xl border border-border-light p-6">
+          <h3 className="text-lg font-semibold text-text-main mb-6">Privacy</h3>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-text-main">Profile Visibility</p>
+                <p className="text-sm text-text-muted">Make your profile visible to other team members</p>
               </div>
-            )}
-          </div>
-
-          {/* Export Section */}
-          <div className="bg-surface-light rounded-xl border border-border-light p-6">
-            <h2 className="text-lg font-semibold text-text-main mb-4">Export Contacts</h2>
-            <p className="text-text-muted mb-6">Download all your contacts as a CSV file.</p>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.privacy.profileVisible}
+                  onChange={(e) => handlePrivacyChange('profileVisible', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
             
-            <button
-              onClick={handleExport}
-              disabled={isExporting}
-              className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm shadow-primary/30 disabled:opacity-50"
-            >
-              <span className="material-symbols-outlined text-base">download</span>
-              {isExporting ? 'Exporting...' : 'Export All Contacts'}
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-text-main">Activity Tracking</p>
+                <p className="text-sm text-text-muted">Allow tracking of your activity for analytics</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.privacy.activityTracking}
+                  onChange={(e) => handlePrivacyChange('activityTracking', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-text-main">Data Sharing</p>
+                <p className="text-sm text-text-muted">Share anonymized data to improve the product</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={settings.privacy.dataSharing}
+                  onChange={(e) => handlePrivacyChange('dataSharing', e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Account Actions */}
+        <div className="bg-surface-light rounded-xl border border-border-light p-6">
+          <h3 className="text-lg font-semibold text-text-main mb-6">Account</h3>
+          <div className="space-y-4">
+            <button className="w-full sm:w-auto bg-slate-100 hover:bg-slate-200 text-text-main px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors">
+              <span className="material-symbols-outlined text-sm">download</span>
+              Export Data
             </button>
-          </div>
-
-          {/* Danger Zone */}
-          <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-            <h2 className="text-lg font-semibold text-red-800 mb-4">Danger Zone</h2>
-            <p className="text-red-700 mb-6">Permanently delete all contacts and groups. This action cannot be undone.</p>
             
-            <button
-              onClick={() => setShowDeleteConfirm(true)}
-              disabled={isDeleting}
-              className="text-red-600 hover:bg-red-50 border border-red-200 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50"
-            >
-              {isDeleting ? 'Deleting...' : 'Delete All Data'}
+            <button className="w-full sm:w-auto bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors">
+              <span className="material-symbols-outlined text-sm">delete</span>
+              Delete Account
             </button>
           </div>
         </div>
       </div>
-
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={handleDeleteAll}
-        title="Delete All Data"
-        message="Are you sure you want to delete all contacts and groups? This action cannot be undone and will permanently remove all your data."
-        confirmText="Delete All"
-        cancelText="Cancel"
-        isDestructive={true}
-      />
     </div>
   );
 }

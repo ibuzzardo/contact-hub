@@ -1,137 +1,127 @@
+import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import SearchBar from '@/components/SearchBar';
 
 jest.useFakeTimers();
 
-describe('SearchBar Component', () => {
-  const mockOnSearch = jest.fn();
+describe('SearchBar', () => {
+  const mockOnChange = jest.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    mockOnChange.mockClear();
   });
 
   afterEach(() => {
     jest.clearAllTimers();
   });
 
-  it('should render search input with default placeholder', () => {
-    render(<SearchBar onSearch={mockOnSearch} />);
+  it('renders with default placeholder', () => {
+    render(<SearchBar value="" onChange={mockOnChange} />);
     
-    const searchInput = screen.getByPlaceholderText('Search...');
-    expect(searchInput).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Search...')).toBeInTheDocument();
   });
 
-  it('should render search input with custom placeholder', () => {
-    render(<SearchBar onSearch={mockOnSearch} placeholder="Search contacts..." />);
+  it('renders with custom placeholder', () => {
+    render(
+      <SearchBar 
+        value="" 
+        onChange={mockOnChange} 
+        placeholder="Search contacts..."
+      />
+    );
     
-    const searchInput = screen.getByPlaceholderText('Search contacts...');
-    expect(searchInput).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Search contacts...')).toBeInTheDocument();
   });
 
-  it('should render with initial value', () => {
-    render(<SearchBar onSearch={mockOnSearch} initialValue="test query" />);
+  it('displays the current value', () => {
+    render(<SearchBar value="test query" onChange={mockOnChange} />);
     
-    const searchInput = screen.getByDisplayValue('test query');
-    expect(searchInput).toBeInTheDocument();
+    const input = screen.getByDisplayValue('test query');
+    expect(input).toBeInTheDocument();
   });
 
-  it('should call onSearch after debounce delay', async () => {
-    render(<SearchBar onSearch={mockOnSearch} />);
+  it('calls onChange with debounced input', async () => {
+    render(<SearchBar value="" onChange={mockOnChange} />);
     
-    const searchInput = screen.getByPlaceholderText('Search...');
-    fireEvent.change(searchInput, { target: { value: 'test' } });
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: 'test' } });
     
     // Should not call immediately
-    expect(mockOnSearch).not.toHaveBeenCalled();
+    expect(mockOnChange).not.toHaveBeenCalled();
     
     // Fast-forward time
     jest.advanceTimersByTime(300);
     
-    expect(mockOnSearch).toHaveBeenCalledWith('test');
+    expect(mockOnChange).toHaveBeenCalledWith('test');
   });
 
-  it('should debounce multiple rapid changes', async () => {
-    render(<SearchBar onSearch={mockOnSearch} />);
+  it('debounces multiple rapid changes', async () => {
+    render(<SearchBar value="" onChange={mockOnChange} />);
     
-    const searchInput = screen.getByPlaceholderText('Search...');
+    const input = screen.getByRole('textbox');
     
-    // Rapid changes
-    fireEvent.change(searchInput, { target: { value: 't' } });
-    fireEvent.change(searchInput, { target: { value: 'te' } });
-    fireEvent.change(searchInput, { target: { value: 'tes' } });
-    fireEvent.change(searchInput, { target: { value: 'test' } });
-    
-    // Should not call during rapid changes
-    expect(mockOnSearch).not.toHaveBeenCalled();
+    fireEvent.change(input, { target: { value: 't' } });
+    fireEvent.change(input, { target: { value: 'te' } });
+    fireEvent.change(input, { target: { value: 'tes' } });
+    fireEvent.change(input, { target: { value: 'test' } });
     
     // Fast-forward time
     jest.advanceTimersByTime(300);
     
-    // Should only call once with final value
-    expect(mockOnSearch).toHaveBeenCalledTimes(1);
-    expect(mockOnSearch).toHaveBeenCalledWith('test');
+    // Should only call once with the final value
+    expect(mockOnChange).toHaveBeenCalledTimes(1);
+    expect(mockOnChange).toHaveBeenCalledWith('test');
   });
 
-  it('should cancel previous timeout on new input', () => {
-    render(<SearchBar onSearch={mockOnSearch} />);
+  it('shows clear button when there is text', () => {
+    render(<SearchBar value="test" onChange={mockOnChange} />);
     
-    const searchInput = screen.getByPlaceholderText('Search...');
-    
-    // First change
-    fireEvent.change(searchInput, { target: { value: 'first' } });
-    jest.advanceTimersByTime(200);
-    
-    // Second change before timeout
-    fireEvent.change(searchInput, { target: { value: 'second' } });
-    jest.advanceTimersByTime(300);
-    
-    // Should only call with second value
-    expect(mockOnSearch).toHaveBeenCalledTimes(1);
-    expect(mockOnSearch).toHaveBeenCalledWith('second');
+    const clearButton = screen.getByRole('button');
+    expect(clearButton).toBeInTheDocument();
+    expect(screen.getByText('close')).toBeInTheDocument();
   });
 
-  it('should handle empty search query', () => {
-    render(<SearchBar onSearch={mockOnSearch} initialValue="test" />);
+  it('hides clear button when text is empty', () => {
+    render(<SearchBar value="" onChange={mockOnChange} />);
     
-    const searchInput = screen.getByDisplayValue('test');
-    fireEvent.change(searchInput, { target: { value: '' } });
-    
-    jest.advanceTimersByTime(300);
-    
-    expect(mockOnSearch).toHaveBeenCalledWith('');
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
 
-  it('should render search icon', () => {
-    render(<SearchBar onSearch={mockOnSearch} />);
+  it('clears input when clear button is clicked', () => {
+    render(<SearchBar value="test" onChange={mockOnChange} />);
     
-    const searchIcon = screen.getByRole('img', { hidden: true });
-    expect(searchIcon).toBeInTheDocument();
+    const clearButton = screen.getByRole('button');
+    fireEvent.click(clearButton);
+    
+    expect(mockOnChange).toHaveBeenCalledWith('');
   });
 
-  it('should have correct input styling', () => {
-    render(<SearchBar onSearch={mockOnSearch} />);
+  it('updates local value when prop value changes', () => {
+    const { rerender } = render(<SearchBar value="initial" onChange={mockOnChange} />);
     
-    const searchInput = screen.getByPlaceholderText('Search...');
-    expect(searchInput).toHaveClass('input', 'pl-10');
+    expect(screen.getByDisplayValue('initial')).toBeInTheDocument();
+    
+    rerender(<SearchBar value="updated" onChange={mockOnChange} />);
+    
+    expect(screen.getByDisplayValue('updated')).toBeInTheDocument();
   });
 
-  it('should call onSearch with initial value on mount', () => {
-    render(<SearchBar onSearch={mockOnSearch} initialValue="initial" />);
+  it('applies custom className', () => {
+    render(
+      <SearchBar 
+        value="" 
+        onChange={mockOnChange} 
+        className="custom-class"
+      />
+    );
     
-    jest.advanceTimersByTime(300);
-    
-    expect(mockOnSearch).toHaveBeenCalledWith('initial');
+    const container = screen.getByRole('textbox').parentElement;
+    expect(container).toHaveClass('custom-class');
   });
 
-  it('should handle special characters in search query', () => {
-    render(<SearchBar onSearch={mockOnSearch} />);
+  it('renders search icon', () => {
+    render(<SearchBar value="" onChange={mockOnChange} />);
     
-    const searchInput = screen.getByPlaceholderText('Search...');
-    const specialQuery = 'test@example.com & special chars!';
-    
-    fireEvent.change(searchInput, { target: { value: specialQuery } });
-    jest.advanceTimersByTime(300);
-    
-    expect(mockOnSearch).toHaveBeenCalledWith(specialQuery);
+    expect(screen.getByText('search')).toBeInTheDocument();
   });
 });

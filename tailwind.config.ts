@@ -1,4 +1,4 @@
-import type { Config } from 'tailwindcss'
+import type { Config } from 'tailwindcss';
 
 const config: Config = {
   content: [
@@ -9,16 +9,19 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        primary: '#3c83f6',
-        'primary-dark': '#2563eb',
+        primary: '#E64626',
+        'primary-dark': '#A83420',
+        'primary-light': '#D85038',
         'background-light': '#f5f7f8',
         'surface-light': '#ffffff',
-        'text-main': '#0f172a',
-        'text-muted': '#64748b',
-        'border-light': '#e2e8f0',
+        'text-main': '#2C2C2C',
+        'text-muted': '#888888',
+        'border-light': '#E0D6CC',
         'card-light': '#ffffff',
         'card-dark': '#1e293b',
-        // Stage colors for deals pipeline
+        'sandstone': '#FBEEE2',
+        'ochre-dark': '#A83420',
+        'ochre-med': '#C63E24',
         'stage-lead': '#94a3b8',
         'stage-qualified': '#3b82f6',
         'stage-proposal': '#facc15',
@@ -27,10 +30,11 @@ const config: Config = {
         'stage-lost': '#ef4444',
       },
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Arial', 'Helvetica', 'system-ui', 'sans-serif'],
       },
     },
   },
   plugins: [],
-}
-export default config
+};
+
+export default config;

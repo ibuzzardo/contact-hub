@@ -1,59 +1,49 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
 import { Contact } from '@/types';
 import Header from '@/components/Header';
 import ContactForm from '@/components/ContactForm';
-import LoadingSpinner from '@/components/LoadingSpinner';
 
-interface EditContactPageProps {
-  params: Promise<{ id: string }>;
-}
-
-export default function EditContactPage({ params }: EditContactPageProps): JSX.Element {
+export default function EditContactPage(): JSX.Element {
+  const params = useParams();
   const router = useRouter();
+  const contactId = parseInt(params.id as string);
+  
   const [contact, setContact] = useState<Contact | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [contactId, setContactId] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
-    const getParams = async (): Promise<void> => {
-      const { id } = await params;
-      setContactId(id);
-      fetchContact(id);
-    };
-    getParams();
-  }, [params]);
+    if (contactId) {
+      fetchContact();
+    }
+  }, [contactId]);
 
-  const fetchContact = async (id: string): Promise<void> => {
+  const fetchContact = async (): Promise<void> => {
     try {
-      const response = await fetch(`/api/contacts/${id}`);
+      const response = await fetch(`/api/contacts/${contactId}`);
       if (response.ok) {
         const data = await response.json();
-        setContact(data.contact);
-      } else {
+        setContact(data);
+      } else if (response.status === 404) {
         router.push('/contacts');
       }
     } catch (error) {
-      console.error('Failed to fetch contact:', error);
-      router.push('/contacts');
+      console.error('Error fetching contact:', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleSubmit = async (data: any): Promise<void> => {
     try {
-      setIsSubmitting(true);
+      setIsSaving(true);
       const response = await fetch(`/api/contacts/${contactId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
       });
 
       if (response.ok) {
@@ -63,10 +53,10 @@ export default function EditContactPage({ params }: EditContactPageProps): JSX.E
         throw error;
       }
     } catch (error) {
-      console.error('Failed to update contact:', error);
+      console.error('Error updating contact:', error);
       throw error;
     } finally {
-      setIsSubmitting(false);
+      setIsSaving(false);
     }
   };
 
@@ -74,11 +64,15 @@ export default function EditContactPage({ params }: EditContactPageProps): JSX.E
     router.push(`/contacts/${contactId}`);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex-1">
-        <Header title="Edit Contact" />
-        <LoadingSpinner />
+        <Header title="Loading..." subtitle="" />
+        <div className="p-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-text-muted">Loading contact...</div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -86,12 +80,17 @@ export default function EditContactPage({ params }: EditContactPageProps): JSX.E
   if (!contact) {
     return (
       <div className="flex-1">
-        <Header title="Contact Not Found" />
+        <Header title="Contact Not Found" subtitle="" />
         <div className="p-6">
-          <p className="text-text-muted">The contact you're looking for doesn't exist.</p>
-          <Link href="/contacts" className="text-primary hover:text-primary-dark font-medium">
-            Back to Contacts
-          </Link>
+          <div className="text-center">
+            <p className="text-text-muted mb-4">The contact you're trying to edit doesn't exist.</p>
+            <button 
+              onClick={() => router.push('/contacts')}
+              className="text-primary hover:text-primary-dark font-medium"
+            >
+              Back to Contacts
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -99,22 +98,17 @@ export default function EditContactPage({ params }: EditContactPageProps): JSX.E
 
   return (
     <div className="flex-1">
-      <Header title="Edit Contact" subtitle={`Update ${contact.name}'s information`}>
-        <Link
-          href={`/contacts/${contactId}`}
-          className="flex items-center gap-2 px-4 py-2 text-text-muted hover:bg-slate-100 rounded-lg transition-colors"
-        >
-          <span className="material-symbols-outlined text-base">arrow_back</span>
-          Back to Contact
-        </Link>
-      </Header>
-
+      <Header 
+        title={`Edit ${contact.name}`}
+        subtitle="Update contact information"
+      />
+      
       <div className="p-6">
-        <ContactForm
+        <ContactForm 
           contact={contact}
           onSubmit={handleSubmit}
           onCancel={handleCancel}
-          isLoading={isSubmitting}
+          isLoading={isSaving}
         />
       </div>
     </div>

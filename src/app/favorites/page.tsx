@@ -1,96 +1,127 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import { Contact, Group } from '@/types';
+import { useState, useEffect } from 'react';
+import { Contact } from '@/types';
 import Header from '@/components/Header';
 import ContactCard from '@/components/ContactCard';
+import SearchBar from '@/components/SearchBar';
+import Pagination from '@/components/Pagination';
 import EmptyState from '@/components/EmptyState';
-import LoadingSpinner from '@/components/LoadingSpinner';
-
-interface FavoritesResponse {
-  contacts: Contact[];
-  groups: Group[];
-  total: number;
-}
 
 export default function FavoritesPage(): JSX.Element {
   const [contacts, setContacts] = useState<Contact[]>([]);
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const fetchFavorites = useCallback(async (): Promise<void> => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/contacts?favorite=true');
-      if (response.ok) {
-        const data: FavoritesResponse = await response.json();
-        setContacts(data.contacts);
-        setGroups(data.groups);
-      }
-    } catch (error) {
-      console.error('Failed to fetch favorites:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const [isLoading, setIsLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalContacts, setTotalContacts] = useState(0);
+  const itemsPerPage = 12;
 
   useEffect(() => {
     fetchFavorites();
-  }, [fetchFavorites]);
+  }, [currentPage, searchTerm]);
 
-  const handleFavoriteToggle = (contactId: number, isFavorite: boolean): void => {
-    if (!isFavorite) {
-      // Remove from favorites list
-      setContacts(prev => prev.filter(contact => contact.id !== contactId));
-    } else {
-      // Update the contact in the list
-      setContacts(prev => prev.map(contact => 
-        contact.id === contactId 
-          ? { ...contact, favorite: 1 }
-          : contact
-      ));
+  const fetchFavorites = async (): Promise<void> => {
+    try {
+      setIsLoading(true);
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+        favorite: '1',
+        ...(searchTerm && { search: searchTerm })
+      });
+      
+      const response = await fetch(`/api/contacts?${params}`);
+      if (response.ok) {
+        const data = await response.json();
+        setContacts(data.contacts || []);
+        setTotalPages(data.totalPages || 1);
+        setTotalContacts(data.total || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching favorites:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const getGroupName = (groupId?: number): string | undefined => {
-    if (!groupId) return undefined;
-    const group = groups.find(g => g.id === groupId);
-    return group?.name;
+  const handleSearch = (term: string): void => {
+    setSearchTerm(term);
+    setCurrentPage(1);
   };
+
+  const handleFavoriteToggle = (contactId: number, isFavorite: boolean): void => {
+    if (!isFavorite) {
+      // Remove from favorites list when unfavorited
+      setContacts(prev => prev.filter(contact => contact.id !== contactId));
+      setTotalContacts(prev => prev - 1);
+    }
+  };
+
+  if (isLoading && currentPage === 1) {
+    return (
+      <div className="flex-1">
+        <Header title="Favorites" subtitle="Loading favorite contacts..." />
+        <div className="p-6">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-text-muted">Loading favorites...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1">
       <Header 
-        title="Favorites"
-        subtitle={`${contacts.length} favorite contact${contacts.length !== 1 ? 's' : ''}`}
-      >
-        <div className="flex items-center gap-2 text-primary">
-          <span className="material-symbols-outlined text-xl">star</span>
-        </div>
-      </Header>
-
+        title="Favorites" 
+        subtitle={`Your ${totalContacts.toLocaleString()} favorite contacts`}
+      />
+      
       <div className="p-6">
-        {loading ? (
-          <LoadingSpinner />
-        ) : contacts.length === 0 ? (
-          <EmptyState
+        {/* Search */}
+        <div className="mb-8">
+          <SearchBar 
+            value={searchTerm}
+            onChange={handleSearch}
+            placeholder="Search favorite contacts..."
+          />
+        </div>
+
+        {/* Favorites Grid */}
+        {contacts.length === 0 ? (
+          <EmptyState 
             icon="star"
-            message="No favorites yet. Star contacts to see them here."
-            actionText="Browse Contacts"
-            onAction={() => window.location.href = '/contacts'}
+            title={searchTerm ? "No favorite contacts found" : "No favorites yet"}
+            description={searchTerm ? 
+              "Try adjusting your search criteria." :
+              "Star contacts to add them to your favorites for quick access."
+            }
+            action={!searchTerm ? {
+              label: "Browse Contacts",
+              href: "/contacts"
+            } : undefined}
           />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {contacts.map((contact) => (
-              <ContactCard
-                key={contact.id}
-                contact={contact}
-                groupName={getGroupName(contact.group_id)}
-                onFavoriteToggle={handleFavoriteToggle}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {contacts.map((contact) => (
+                <ContactCard 
+                  key={contact.id} 
+                  contact={contact}
+                  onFavoriteToggle={handleFavoriteToggle}
+                />
+              ))}
+            </div>
+            
+            <Pagination 
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalContacts}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+            />
+          </>
         )}
       </div>
     </div>

@@ -100,87 +100,100 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading = f
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className={`w-full px-4 py-2.5 bg-surface-light border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-text-main placeholder:text-slate-400 transition-all shadow-sm ${
-                errors.name ? 'border-red-300' : 'border-border-light'
+              className={`w-full px-4 py-2 border rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
+                errors.name ? 'border-red-500' : 'border-border-light'
               }`}
+              placeholder="Enter full name"
               required
             />
-            {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name}</p>}
+            {errors.name && (
+              <p className="text-red-500 text-sm mt-1">{errors.name}</p>
+            )}
           </div>
 
-          {/* Email and Phone */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-text-main mb-2">
-                Email Address *
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className={`w-full px-4 py-2.5 bg-surface-light border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-text-main placeholder:text-slate-400 transition-all shadow-sm ${
-                  errors.email ? 'border-red-300' : 'border-border-light'
-                }`}
-                required
-              />
-              {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
-            </div>
-
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-text-main mb-2">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                className={`w-full px-4 py-2.5 bg-surface-light border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-text-main placeholder:text-slate-400 transition-all shadow-sm ${
-                  errors.phone ? 'border-red-300' : 'border-border-light'
-                }`}
-              />
-              {errors.phone && <p className="mt-1 text-sm text-red-600">{errors.phone}</p>}
-            </div>
+          {/* Email */}
+          <div>
+            <label htmlFor="email" className="block text-sm font-medium text-text-main mb-2">
+              Email Address *
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 border rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
+                errors.email ? 'border-red-500' : 'border-border-light'
+              }`}
+              placeholder="Enter email address"
+              required
+            />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            )}
           </div>
 
-          {/* Company and Job Title */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="company" className="block text-sm font-medium text-text-main mb-2">
-                Company
-              </label>
-              <input
-                type="text"
-                id="company"
-                name="company"
-                value={formData.company}
-                onChange={handleChange}
-                className={`w-full px-4 py-2.5 bg-surface-light border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-text-main placeholder:text-slate-400 transition-all shadow-sm ${
-                  errors.company ? 'border-red-300' : 'border-border-light'
-                }`}
-              />
-              {errors.company && <p className="mt-1 text-sm text-red-600">{errors.company}</p>}
-            </div>
+          {/* Phone */}
+          <div>
+            <label htmlFor="phone" className="block text-sm font-medium text-text-main mb-2">
+              Phone Number
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 border rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
+                errors.phone ? 'border-red-500' : 'border-border-light'
+              }`}
+              placeholder="Enter phone number"
+            />
+            {errors.phone && (
+              <p className="text-red-500 text-sm mt-1">{errors.phone}</p>
+            )}
+          </div>
 
-            <div>
-              <label htmlFor="job_title" className="block text-sm font-medium text-text-main mb-2">
-                Job Title
-              </label>
-              <input
-                type="text"
-                id="job_title"
-                name="job_title"
-                value={formData.job_title}
-                onChange={handleChange}
-                className={`w-full px-4 py-2.5 bg-surface-light border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-text-main placeholder:text-slate-400 transition-all shadow-sm ${
-                  errors.job_title ? 'border-red-300' : 'border-border-light'
-                }`}
-              />
-              {errors.job_title && <p className="mt-1 text-sm text-red-600">{errors.job_title}</p>}
-            </div>
+          {/* Company */}
+          <div>
+            <label htmlFor="company" className="block text-sm font-medium text-text-main mb-2">
+              Company
+            </label>
+            <input
+              type="text"
+              id="company"
+              name="company"
+              value={formData.company}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 border rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
+                errors.company ? 'border-red-500' : 'border-border-light'
+              }`}
+              placeholder="Enter company name"
+            />
+            {errors.company && (
+              <p className="text-red-500 text-sm mt-1">{errors.company}</p>
+            )}
+          </div>
+
+          {/* Job Title */}
+          <div>
+            <label htmlFor="job_title" className="block text-sm font-medium text-text-main mb-2">
+              Job Title
+            </label>
+            <input
+              type="text"
+              id="job_title"
+              name="job_title"
+              value={formData.job_title}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 border rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
+                errors.job_title ? 'border-red-500' : 'border-border-light'
+              }`}
+              placeholder="Enter job title"
+            />
+            {errors.job_title && (
+              <p className="text-red-500 text-sm mt-1">{errors.job_title}</p>
+            )}
           </div>
 
           {/* Group */}
@@ -193,18 +206,20 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading = f
               name="group_id"
               value={formData.group_id}
               onChange={handleChange}
-              className={`w-full px-4 py-2.5 bg-surface-light border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-text-main transition-all shadow-sm ${
-                errors.group_id ? 'border-red-300' : 'border-border-light'
+              className={`w-full px-4 py-2 border rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors ${
+                errors.group_id ? 'border-red-500' : 'border-border-light'
               }`}
             >
-              <option value="">Select a group</option>
+              <option value="">Select a group (optional)</option>
               {groups.map((group) => (
-                <option key={group.id} value={group.id}>
+                <option key={group.id} value={group.id.toString()}>
                   {group.name}
                 </option>
               ))}
             </select>
-            {errors.group_id && <p className="mt-1 text-sm text-red-600">{errors.group_id}</p>}
+            {errors.group_id && (
+              <p className="text-red-500 text-sm mt-1">{errors.group_id}</p>
+            )}
           </div>
 
           {/* Notes */}
@@ -215,18 +230,20 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading = f
             <textarea
               id="notes"
               name="notes"
-              rows={4}
               value={formData.notes}
               onChange={handleChange}
-              className={`w-full px-4 py-2.5 bg-surface-light border rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm text-text-main placeholder:text-slate-400 transition-all shadow-sm resize-none ${
-                errors.notes ? 'border-red-300' : 'border-border-light'
+              rows={4}
+              className={`w-full px-4 py-2 border rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none ${
+                errors.notes ? 'border-red-500' : 'border-border-light'
               }`}
-              placeholder="Add any additional notes..."
+              placeholder="Add any additional notes about this contact..."
             />
-            {errors.notes && <p className="mt-1 text-sm text-red-600">{errors.notes}</p>}
+            {errors.notes && (
+              <p className="text-red-500 text-sm mt-1">{errors.notes}</p>
+            )}
           </div>
 
-          {/* Mark as Favorite */}
+          {/* Favorite */}
           <div className="flex items-center gap-3">
             <input
               type="checkbox"
@@ -237,16 +254,16 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading = f
               className="w-4 h-4 text-primary bg-surface-light border-border-light rounded focus:ring-primary focus:ring-2"
             />
             <label htmlFor="favorite" className="text-sm font-medium text-text-main">
-              Mark as Favorite
+              Mark as favorite
             </label>
           </div>
 
-          {/* Buttons */}
-          <div className="flex justify-end gap-3 pt-4">
+          {/* Form Actions */}
+          <div className="flex justify-end gap-4 pt-6 border-t border-border-light">
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 text-text-muted hover:bg-slate-100 rounded-lg transition-colors font-medium"
+              className="px-6 py-2 text-text-muted hover:bg-slate-100 rounded-lg transition-colors font-medium"
               disabled={isLoading}
             >
               Cancel
@@ -254,9 +271,9 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading = f
             <button
               type="submit"
               disabled={isLoading}
-              className="flex items-center gap-2 bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors shadow-sm shadow-primary/30 disabled:opacity-50"
+              className="bg-primary hover:bg-primary-dark text-white px-6 py-2 rounded-lg font-medium transition-colors shadow-sm shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? 'Saving...' : 'Save Contact'}
+              {isLoading ? 'Saving...' : contact ? 'Update Contact' : 'Create Contact'}
             </button>
           </div>
         </form>

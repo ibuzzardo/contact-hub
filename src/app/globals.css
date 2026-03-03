@@ -4,27 +4,10 @@
 
 @layer base {
   * {
-    @apply border-border;
-  }
-  body {
-    font-family: 'Inter', system-ui, sans-serif;
-  }
-}
-
-@layer components {
-  .material-symbols-outlined {
-    font-variation-settings:
-      'FILL' 0,
-      'wght' 400,
-      'GRAD' 0,
-      'opsz' 24;
+    border-color: #E0D6CC;
   }
   
-  .material-symbols-outlined.fill-current {
-    font-variation-settings:
-      'FILL' 1,
-      'wght' 400,
-      'GRAD' 0,
-      'opsz' 24;
+  body {
+    font-family: 'Arial', 'Helvetica', system-ui, sans-serif;
   }
 }

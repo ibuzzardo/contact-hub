@@ -110,13 +110,20 @@ export default function DealSlideOver({ isOpen, onClose, deal, onSaved }: DealSl
 
       if (response.ok) {
         onSaved();
-        onClose();
       }
     } catch (error) {
       console.error('Error saving deal:', error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): void => {
+    const { name, value, type } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'number' ? parseFloat(value) || 0 : value
+    }));
   };
 
   const addTag = (): void => {
@@ -137,29 +144,33 @@ export default function DealSlideOver({ isOpen, onClose, deal, onSaved }: DealSl
     }));
   };
 
-  if (!isOpen) return <></>;
+  const stages = [
+    { value: 'lead', label: 'Lead' },
+    { value: 'qualified', label: 'Qualified' },
+    { value: 'proposal', label: 'Proposal' },
+    { value: 'negotiation', label: 'Negotiation' },
+    { value: 'won', label: 'Won' },
+    { value: 'lost', label: 'Lost' }
+  ];
+
+  if (!isOpen) return <div></div>;
 
   return (
-    <>
-      {/* Overlay */}
-      <div 
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40"
-        onClick={onClose}
-      />
+    <div className="fixed inset-0 z-50 overflow-hidden">
+      <div className="absolute inset-0 bg-black bg-opacity-50" onClick={onClose} />
       
-      {/* Slide-over */}
-      <div className="fixed right-0 top-0 h-full w-[480px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out">
+      <div className="absolute right-0 top-0 h-full w-full max-w-md bg-surface-light shadow-xl">
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-slate-200">
-            <h2 className="text-xl font-semibold text-slate-900">
-              {deal ? 'Edit Deal' : 'Add New Deal'}
+          <div className="flex items-center justify-between p-6 border-b border-border-light">
+            <h2 className="text-lg font-semibold text-text-main">
+              {deal ? 'Edit Deal' : 'New Deal'}
             </h2>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+              className="text-text-muted hover:text-text-main transition-colors"
             >
-              <span className="material-symbols-outlined text-slate-500">close</span>
+              <span className="material-symbols-outlined">close</span>
             </button>
           </div>
 
@@ -168,14 +179,16 @@ export default function DealSlideOver({ isOpen, onClose, deal, onSaved }: DealSl
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               {/* Deal Name */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="name" className="block text-sm font-medium text-text-main mb-2">
                   Deal Name *
                 </label>
                 <input
                   type="text"
+                  id="name"
+                  name="name"
                   value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                   placeholder="Enter deal name"
                   required
                 />
@@ -183,17 +196,19 @@ export default function DealSlideOver({ isOpen, onClose, deal, onSaved }: DealSl
 
               {/* Company */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="company_id" className="block text-sm font-medium text-text-main mb-2">
                   Company
                 </label>
                 <select
+                  id="company_id"
+                  name="company_id"
                   value={formData.company_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, company_id: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                 >
-                  <option value="">Select company</option>
-                  {companies.map(company => (
-                    <option key={company.id} value={company.id}>
+                  <option value="">Select company (optional)</option>
+                  {companies.map((company) => (
+                    <option key={company.id} value={company.id.toString()}>
                       {company.name}
                     </option>
                   ))}
@@ -202,187 +217,192 @@ export default function DealSlideOver({ isOpen, onClose, deal, onSaved }: DealSl
 
               {/* Contact */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Contact Person
+                <label htmlFor="contact_id" className="block text-sm font-medium text-text-main mb-2">
+                  Contact
                 </label>
                 <select
+                  id="contact_id"
+                  name="contact_id"
                   value={formData.contact_id}
-                  onChange={(e) => setFormData(prev => ({ ...prev, contact_id: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                 >
-                  <option value="">Select contact</option>
-                  {contacts.map(contact => (
-                    <option key={contact.id} value={contact.id}>
-                      {contact.name}
+                  <option value="">Select contact (optional)</option>
+                  {contacts.map((contact) => (
+                    <option key={contact.id} value={contact.id.toString()}>
+                      {contact.name} - {contact.email}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {/* Value and Expected Close */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Deal Value
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-2 text-slate-500">$</span>
-                    <input
-                      type="number"
-                      value={formData.value}
-                      onChange={(e) => setFormData(prev => ({ ...prev, value: parseFloat(e.target.value) || 0 }))}
-                      className="w-full pl-8 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="0"
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Expected Close
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.expected_close}
-                    onChange={(e) => setFormData(prev => ({ ...prev, expected_close: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
+              {/* Value */}
+              <div>
+                <label htmlFor="value" className="block text-sm font-medium text-text-main mb-2">
+                  Deal Value ($)
+                </label>
+                <input
+                  type="number"
+                  id="value"
+                  name="value"
+                  value={formData.value}
+                  onChange={handleChange}
+                  min="0"
+                  step="0.01"
+                  className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                  placeholder="0.00"
+                />
               </div>
 
-              {/* Pipeline Stage */}
+              {/* Stage */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Pipeline Stage
+                <label htmlFor="stage" className="block text-sm font-medium text-text-main mb-2">
+                  Stage
                 </label>
                 <select
+                  id="stage"
+                  name="stage"
                   value={formData.stage}
-                  onChange={(e) => setFormData(prev => ({ ...prev, stage: e.target.value as any }))}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                 >
-                  <option value="lead">Lead</option>
-                  <option value="qualified">Qualified</option>
-                  <option value="proposal">Proposal</option>
-                  <option value="negotiation">Negotiation</option>
-                  <option value="closed_won">Closed Won</option>
-                  <option value="closed_lost">Closed Lost</option>
+                  {stages.map((stage) => (
+                    <option key={stage.value} value={stage.value}>
+                      {stage.label}
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              {/* Win Probability */}
+              {/* Probability */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Win Probability
-                  <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
-                    {formData.probability}%
-                  </span>
+                <label htmlFor="probability" className="block text-sm font-medium text-text-main mb-2">
+                  Probability ({formData.probability}%)
                 </label>
                 <input
                   type="range"
+                  id="probability"
+                  name="probability"
+                  value={formData.probability}
+                  onChange={handleChange}
                   min="0"
                   max="100"
-                  value={formData.probability}
-                  onChange={(e) => setFormData(prev => ({ ...prev, probability: parseInt(e.target.value) }))}
+                  step="5"
                   className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer slider"
+                />
+              </div>
+
+              {/* Expected Close */}
+              <div>
+                <label htmlFor="expected_close" className="block text-sm font-medium text-text-main mb-2">
+                  Expected Close Date
+                </label>
+                <input
+                  type="date"
+                  id="expected_close"
+                  name="expected_close"
+                  value={formData.expected_close}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
                 />
               </div>
 
               {/* Tags */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-text-main mb-2">
                   Tags
                 </label>
                 <div className="flex flex-wrap gap-2 mb-2">
-                  {formData.tags.map(tag => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm"
-                    >
+                  {formData.tags.map((tag, index) => (
+                    <span key={index} className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full flex items-center gap-1">
                       {tag}
                       <button
                         type="button"
                         onClick={() => removeTag(tag)}
-                        className="hover:text-blue-900"
+                        className="text-primary hover:text-primary-dark"
                       >
                         <span className="material-symbols-outlined text-xs">close</span>
                       </button>
                     </span>
                   ))}
-                  {showTagInput ? (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={newTag}
-                        onChange={(e) => setNewTag(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                        className="px-2 py-1 border border-slate-300 rounded text-sm focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="Tag name"
-                        autoFocus
-                      />
-                      <button
-                        type="button"
-                        onClick={addTag}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        <span className="material-symbols-outlined text-sm">check</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setShowTagInput(false); setNewTag(''); }}
-                        className="text-slate-500 hover:text-slate-700"
-                      >
-                        <span className="material-symbols-outlined text-sm">close</span>
-                      </button>
-                    </div>
-                  ) : (
+                </div>
+                {showTagInput ? (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
+                      className="flex-1 px-3 py-1 text-sm border border-border-light rounded bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                      placeholder="Enter tag name"
+                      autoFocus
+                    />
                     <button
                       type="button"
-                      onClick={() => setShowTagInput(true)}
-                      className="inline-flex items-center gap-1 px-3 py-1 border border-dashed border-slate-300 text-slate-500 rounded-full text-sm hover:border-slate-400 hover:text-slate-600"
+                      onClick={addTag}
+                      className="px-3 py-1 text-sm bg-primary text-white rounded hover:bg-primary-dark transition-colors"
                     >
-                      <span className="material-symbols-outlined text-xs">add</span>
-                      Add Tag
+                      Add
                     </button>
-                  )}
-                </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowTagInput(false);
+                        setNewTag('');
+                      }}
+                      className="px-3 py-1 text-sm text-text-muted hover:text-text-main transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowTagInput(true)}
+                    className="text-sm text-primary hover:text-primary-dark transition-colors"
+                  >
+                    + Add tag
+                  </button>
+                )}
               </div>
 
               {/* Notes */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="notes" className="block text-sm font-medium text-text-main mb-2">
                   Notes
                 </label>
                 <textarea
+                  id="notes"
+                  name="notes"
                   value={formData.notes}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
+                  onChange={handleChange}
                   rows={4}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none"
                   placeholder="Add notes about this deal..."
                 />
               </div>
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-slate-200">
+            <div className="flex justify-end gap-3 p-6 border-t border-border-light">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+                className="px-4 py-2 text-text-muted hover:bg-slate-100 rounded-lg transition-colors font-medium"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isLoading || !formData.name.trim()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Saving...' : deal ? 'Update Deal' : 'Save Deal'}
+                {isLoading ? 'Saving...' : deal ? 'Update Deal' : 'Create Deal'}
               </button>
             </div>
           </form>
         </div>
       </div>
-    </>
+    </div>
   );
 }
