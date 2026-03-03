@@ -1,15 +1,22 @@
-import { getGroupBadgeColor } from '@/lib/utils';
+import { Group } from '@/types';
 
 interface GroupBadgeProps {
-  name: string;
+  group: Group;
+  size?: 'sm' | 'md';
 }
 
-export default function GroupBadge({ name }: GroupBadgeProps): JSX.Element {
-  const { bg, text, border } = getGroupBadgeColor(name);
+export default function GroupBadge({ group, size = 'md' }: GroupBadgeProps): JSX.Element {
+  const sizeClasses = {
+    sm: 'px-2 py-1 text-xs',
+    md: 'px-3 py-1 text-sm'
+  };
   
   return (
-    <span className={`px-2.5 py-1 rounded-md ${bg} ${text} text-xs font-medium border ${border}`}>
-      {name}
+    <span 
+      className={`${sizeClasses[size]} font-medium rounded-full text-white`}
+      style={{ backgroundColor: group.color }}
+    >
+      {group.name}
     </span>
   );
 }

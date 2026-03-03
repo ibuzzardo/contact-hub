@@ -1,38 +1,29 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Deal, Activity } from '@/types/crm';
+import { Deal, Activity, Contact, Company } from '@/types';
 import Header from '@/components/Header';
-import Avatar from '@/components/Avatar';
-import DealSlideOver from '@/components/DealSlideOver';
 import ActivityModal from '@/components/ActivityModal';
+import DealSlideOver from '@/components/DealSlideOver';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { getRelativeTime } from '@/lib/utils';
 
-interface DealDetailPageProps {
-  params: Promise<{ id: string }>;
-}
-
-export default function DealDetailPage({ params }: DealDetailPageProps): JSX.Element {
+export default function DealDetailPage(): JSX.Element {
+  const params = useParams();
   const router = useRouter();
+  const dealId = parseInt(params.id as string);
+  
   const [deal, setDeal] = useState<Deal | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
+  const [contact, setContact] = useState<Contact | null>(null);
+  const [company, setCompany] = useState<Company | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [showEditDeal, setShowEditDeal] = useState(false);
-  const [showLogActivity, setShowLogActivity] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showActivityModal, setShowActivityModal] = useState(false);
+  const [showEditSlideOver, setShowEditSlideOver] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [dealId, setDealId] = useState<string>('');
-
-  useEffect(() => {
-    const loadParams = async (): Promise<void> => {
-      const resolvedParams = await params;
-      setDealId(resolvedParams.id);
-    };
-    loadParams();
-  }, [params]);
 
   useEffect(() => {
     if (dealId) {
@@ -47,6 +38,13 @@ export default function DealDetailPage({ params }: DealDetailPageProps): JSX.Ele
       if (response.ok) {
         const data = await response.json();
         setDeal(data);
+        
+        if (data.contact_id) {
+          fetchContact(data.contact_id);
+        }
+        if (data.company_id) {
+          fetchCompany(data.company_id);
+        }
       } else if (response.status === 404) {
         router.push('/deals');
       }
@@ -57,19 +55,43 @@ export default function DealDetailPage({ params }: DealDetailPageProps): JSX.Ele
     }
   };
 
+  const fetchContact = async (contactId: number): Promise<void> => {
+    try {
+      const response = await fetch(`/api/contacts/${contactId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setContact(data);
+      }
+    } catch (error) {
+      console.error('Error fetching contact:', error);
+    }
+  };
+
+  const fetchCompany = async (companyId: number): Promise<void> => {
+    try {
+      const response = await fetch(`/api/companies/${companyId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setCompany(data);
+      }
+    } catch (error) {
+      console.error('Error fetching company:', error);
+    }
+  };
+
   const fetchActivities = async (): Promise<void> => {
     try {
       const response = await fetch(`/api/activities?deal_id=${dealId}`);
       if (response.ok) {
         const data = await response.json();
-        setActivities(data);
+        setActivities(data || []);
       }
     } catch (error) {
       console.error('Error fetching activities:', error);
     }
   };
 
-  const handleDeleteDeal = async (): Promise<void> => {
+  const handleDelete = async (): Promise<void> => {
     try {
       setIsDeleting(true);
       const response = await fetch(`/api/deals/${dealId}`, {
@@ -83,53 +105,41 @@ export default function DealDetailPage({ params }: DealDetailPageProps): JSX.Ele
       console.error('Error deleting deal:', error);
     } finally {
       setIsDeleting(false);
-      setShowDeleteConfirm(false);
-    }
-  };
-
-  const getStageColor = (stage: string): string => {
-    switch (stage) {
-      case 'lead': return 'bg-slate-100 text-slate-700';
-      case 'qualified': return 'bg-blue-100 text-blue-700';
-      case 'proposal': return 'bg-amber-100 text-amber-700';
-      case 'negotiation': return 'bg-purple-100 text-purple-700';
-      case 'closed_won': return 'bg-emerald-100 text-emerald-700';
-      case 'closed_lost': return 'bg-red-100 text-red-700';
-      default: return 'bg-slate-100 text-slate-700';
-    }
-  };
-
-  const getStageName = (stage: string): string => {
-    switch (stage) {
-      case 'lead': return 'Lead';
-      case 'qualified': return 'Qualified';
-      case 'proposal': return 'Proposal';
-      case 'negotiation': return 'Negotiation';
-      case 'closed_won': return 'Closed Won';
-      case 'closed_lost': return 'Closed Lost';
-      default: return stage;
+      setShowDeleteDialog(false);
     }
   };
 
   const getActivityIcon = (type: string): string => {
     switch (type) {
-      case 'call': return 'phone';
-      case 'email': return 'email';
-      case 'meeting': return 'groups';
-      case 'note': return 'description';
+      case 'call': return 'call';
+      case 'email': return 'mail';
+      case 'meeting': return 'event';
+      case 'note': return 'note';
       case 'stage_change': return 'trending_up';
       default: return 'timeline';
     }
   };
 
-  const getActivityBorderColor = (type: string): string => {
+  const getActivityIconColor = (type: string): string => {
     switch (type) {
-      case 'call': return 'border-l-blue-500';
-      case 'email': return 'border-l-green-500';
-      case 'meeting': return 'border-l-purple-500';
-      case 'note': return 'border-l-amber-500';
-      case 'stage_change': return 'border-l-slate-400';
-      default: return 'border-l-slate-400';
+      case 'call': return 'bg-green-500';
+      case 'email': return 'bg-blue-500';
+      case 'meeting': return 'bg-purple-500';
+      case 'note': return 'bg-orange-500';
+      case 'stage_change': return 'bg-indigo-500';
+      default: return 'bg-slate-500';
+    }
+  };
+
+  const getStageColor = (stage: string): string => {
+    switch (stage) {
+      case 'lead': return 'bg-stage-lead';
+      case 'qualified': return 'bg-stage-qualified';
+      case 'proposal': return 'bg-stage-proposal';
+      case 'negotiation': return 'bg-stage-negotiation';
+      case 'won': return 'bg-stage-won';
+      case 'lost': return 'bg-stage-lost';
+      default: return 'bg-slate-500';
     }
   };
 
@@ -142,22 +152,13 @@ export default function DealDetailPage({ params }: DealDetailPageProps): JSX.Ele
     }).format(amount);
   };
 
-  const formatDate = (dateString?: string): string => {
-    if (!dateString) return 'Not set';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
   if (isLoading) {
     return (
       <div className="flex-1">
-        <Header title="Deal Details" subtitle="Loading deal information..." />
+        <Header title="Loading..." subtitle="" />
         <div className="p-6">
           <div className="flex items-center justify-center h-64">
-            <div className="text-slate-500">Loading deal...</div>
+            <div className="text-text-muted">Loading deal...</div>
           </div>
         </div>
       </div>
@@ -167,11 +168,15 @@ export default function DealDetailPage({ params }: DealDetailPageProps): JSX.Ele
   if (!deal) {
     return (
       <div className="flex-1">
-        <Header title="Deal Not Found" subtitle="The requested deal could not be found." />
+        <Header title="Deal Not Found" subtitle="" />
         <div className="p-6">
           <div className="text-center">
-            <Link href="/deals" className="text-blue-600 hover:text-blue-800">
-              ← Back to Deals
+            <p className="text-text-muted mb-4">The deal you're looking for doesn't exist.</p>
+            <Link 
+              href="/deals"
+              className="text-primary hover:text-primary-dark font-medium"
+            >
+              Back to Deals
             </Link>
           </div>
         </div>
@@ -179,240 +184,220 @@ export default function DealDetailPage({ params }: DealDetailPageProps): JSX.Ele
     );
   }
 
-  const dealTags = deal.tags ? deal.tags.split(',').filter(Boolean) : [];
-
   return (
     <div className="flex-1">
       <Header 
         title={deal.name}
-        subtitle={`Deal #DL-${deal.id}`}
-      >
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setShowEditDeal(true)}
-            className="flex items-center gap-2 px-4 py-2 text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
-          >
-            <span className="material-symbols-outlined text-sm">edit</span>
-            Edit
-          </button>
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="flex items-center gap-2 px-4 py-2 text-red-700 border border-red-300 rounded-lg hover:bg-red-50 transition-colors"
-          >
-            <span className="material-symbols-outlined text-sm">delete</span>
-            Delete
-          </button>
-        </div>
-      </Header>
-
-      <div className="p-6">
-        <div className="flex gap-6">
-          {/* Left Column - Deal Info */}
-          <div className="w-3/5">
-            <div className="bg-white rounded-xl border border-slate-200 p-6">
-              {/* Stage Badge */}
-              <div className="mb-4">
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStageColor(deal.stage)}`}>
-                  {getStageName(deal.stage)}
+        subtitle={`${formatCurrency(deal.value)} • ${deal.probability}% probability`}
+        action={
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowActivityModal(true)}
+              className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm shadow-primary/30"
+            >
+              <span className="material-symbols-outlined text-sm">add</span>
+              Log Activity
+            </button>
+            
+            <button
+              onClick={() => setShowEditSlideOver(true)}
+              className="bg-slate-100 hover:bg-slate-200 text-text-main px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">edit</span>
+              Edit
+            </button>
+            
+            <button
+              onClick={() => setShowDeleteDialog(true)}
+              className="text-red-600 hover:bg-red-50 px-4 py-2 rounded-lg font-medium flex items-center gap-2 transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">delete</span>
+              Delete
+            </button>
+          </div>
+        }
+      />
+      
+      <div className="p-6 space-y-8">
+        {/* Deal Info */}
+        <div className="bg-surface-light rounded-xl border border-border-light p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div>
+              <label className="text-sm font-medium text-text-muted">Stage</label>
+              <div className="mt-2">
+                <span className={`px-3 py-1 text-sm font-medium rounded-full text-white ${getStageColor(deal.stage)}`}>
+                  {deal.stage.replace('_', ' ')}
                 </span>
               </div>
-
-              {/* Deal Name and ID */}
-              <div className="mb-6">
-                <h1 className="text-2xl font-bold text-slate-900 mb-1">{deal.name}</h1>
-                <p className="text-slate-500">#DL-{deal.id}</p>
-              </div>
-
-              {/* Stats Row */}
-              <div className="grid grid-cols-3 gap-6 mb-8 p-4 bg-slate-50 rounded-lg">
-                <div>
-                  <div className="text-2xl font-bold text-slate-900">{formatCurrency(deal.value)}</div>
-                  <div className="text-sm text-slate-500">Deal Value</div>
-                </div>
-                <div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-2xl font-bold text-slate-900">{deal.probability}%</span>
-                    <span className="material-symbols-outlined text-green-500 text-sm">trending_up</span>
-                  </div>
-                  <div className="text-sm text-slate-500">Probability</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-slate-900">{formatDate(deal.expected_close)}</div>
-                  <div className="text-sm text-slate-500">Expected Close</div>
-                </div>
-              </div>
-
-              {/* Related Information */}
-              {(deal.company_name || deal.contact_name) && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-3">Related Information</h3>
-                  <div className="space-y-3">
-                    {deal.company_name && (
-                      <Link 
-                        href={`/companies/${deal.company_id}`}
-                        className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                      >
-                        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                          <span className="material-symbols-outlined text-blue-600">business</span>
-                        </div>
-                        <div>
-                          <div className="font-medium text-slate-900">{deal.company_name}</div>
-                          <div className="text-sm text-slate-500">Company</div>
-                        </div>
-                      </Link>
-                    )}
-                    {deal.contact_name && (
-                      <Link 
-                        href={`/contacts/${deal.contact_id}`}
-                        className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                      >
-                        <Avatar name={deal.contact_name} size="sm" />
-                        <div>
-                          <div className="font-medium text-slate-900">{deal.contact_name}</div>
-                          <div className="text-sm text-slate-500">Contact</div>
-                        </div>
-                      </Link>
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* Tags */}
-              {dealTags.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-3">Tags</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {dealTags.map(tag => (
-                      <span
-                        key={tag}
-                        className="bg-slate-100 rounded-full px-3 py-1 text-sm text-slate-700"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Notes */}
-              {deal.notes && (
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-3">Notes</h3>
-                  <p className="text-slate-600 whitespace-pre-wrap">{deal.notes}</p>
-                </div>
-              )}
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-text-muted">Value</label>
+              <p className="text-2xl font-bold text-text-main mt-1">{formatCurrency(deal.value)}</p>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-text-muted">Probability</label>
+              <p className="text-2xl font-bold text-text-main mt-1">{deal.probability}%</p>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-text-muted">Expected Close</label>
+              <p className="text-lg font-medium text-text-main mt-1">
+                {deal.expected_close ? getRelativeTime(deal.expected_close) : '—'}
+              </p>
             </div>
           </div>
-
-          {/* Right Column - Activity Timeline */}
-          <div className="w-2/5">
-            <div className="bg-white rounded-xl border border-slate-200 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-semibold text-slate-900">Activity Timeline</h2>
-                <button
-                  onClick={() => setShowLogActivity(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <span className="material-symbols-outlined text-sm">add</span>
-                  Log Activity
-                </button>
-              </div>
-
-              {activities.length === 0 ? (
-                <div className="text-center py-8">
-                  <span className="material-symbols-outlined text-4xl text-slate-300 mb-3 block">timeline</span>
-                  <p className="text-slate-500 mb-4">No activities yet. Log your first activity.</p>
-                  <button
-                    onClick={() => setShowLogActivity(true)}
-                    className="text-blue-600 hover:text-blue-800 font-medium"
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6 pt-6 border-t border-border-light">
+            {contact && (
+              <div>
+                <label className="text-sm font-medium text-text-muted">Contact</label>
+                <div className="mt-2">
+                  <Link 
+                    href={`/contacts/${contact.id}`}
+                    className="flex items-center gap-3 p-3 border border-border-light rounded-lg hover:shadow-md transition-shadow"
                   >
-                    Log Activity
-                  </button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {activities.map(activity => (
-                    <div
-                      key={activity.id}
-                      className={`border-l-4 pl-4 pb-4 ${getActivityBorderColor(activity.type)}`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 mt-1">
-                          <span className="material-symbols-outlined text-sm text-slate-600">
-                            {getActivityIcon(activity.type)}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium text-slate-900 mb-1">{activity.subject}</div>
-                          {activity.description && (
-                            <p className="text-slate-600 text-sm mb-2 line-clamp-2">
-                              {activity.description}
-                            </p>
-                          )}
-                          <div className="flex items-center gap-2 text-xs text-slate-500">
-                            {activity.contact_name && (
-                              <span className="bg-slate-100 px-2 py-1 rounded">
-                                {activity.contact_name}
-                              </span>
-                            )}
-                            {activity.duration_minutes && (
-                              <span className="bg-slate-100 px-2 py-1 rounded">
-                                {activity.duration_minutes} min
-                              </span>
-                            )}
-                            {activity.outcome && (
-                              <span className={`px-2 py-1 rounded ${
-                                activity.outcome === 'positive' ? 'bg-green-100 text-green-700' :
-                                activity.outcome === 'negative' ? 'bg-red-100 text-red-700' :
-                                'bg-slate-100 text-slate-700'
-                              }`}>
-                                {activity.outcome}
-                              </span>
-                            )}
-                          </div>
-                          <div className="text-xs text-slate-400 mt-2">
-                            {getRelativeTime(activity.activity_date)}
-                          </div>
-                        </div>
-                      </div>
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-primary">person</span>
                     </div>
-                  ))}
+                    <div>
+                      <p className="font-medium text-text-main">{contact.name}</p>
+                      <p className="text-sm text-text-muted">{contact.email}</p>
+                    </div>
+                  </Link>
                 </div>
-              )}
+              </div>
+            )}
+            
+            {company && (
+              <div>
+                <label className="text-sm font-medium text-text-muted">Company</label>
+                <div className="mt-2">
+                  <Link 
+                    href={`/companies/${company.id}`}
+                    className="flex items-center gap-3 p-3 border border-border-light rounded-lg hover:shadow-md transition-shadow"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-primary">domain</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-text-main">{company.name}</p>
+                      {company.industry && (
+                        <p className="text-sm text-text-muted">{company.industry}</p>
+                      )}
+                    </div>
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {deal.notes && (
+            <div className="mt-6 pt-6 border-t border-border-light">
+              <label className="text-sm font-medium text-text-muted">Notes</label>
+              <p className="text-text-main mt-2 whitespace-pre-wrap">{deal.notes}</p>
             </div>
+          )}
+          
+          {deal.tags && (
+            <div className="mt-6 pt-6 border-t border-border-light">
+              <label className="text-sm font-medium text-text-muted">Tags</label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {deal.tags.split(',').filter(Boolean).map((tag, index) => (
+                  <span key={index} className="px-2 py-1 text-xs font-medium bg-slate-100 text-slate-700 rounded-full">
+                    {tag.trim()}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Activities */}
+        <div className="bg-surface-light rounded-xl border border-border-light p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-semibold text-text-main">Activities</h3>
+            <button
+              onClick={() => setShowActivityModal(true)}
+              className="text-primary hover:text-primary-dark text-sm font-medium transition-colors"
+            >
+              Add Activity
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            {activities.length === 0 ? (
+              <p className="text-text-muted text-center py-8">No activities yet</p>
+            ) : (
+              activities.map((activity) => (
+                <div key={activity.id} className="flex items-start gap-3 p-4 border border-border-light rounded-lg">
+                  <div className={`w-8 h-8 rounded-full ${getActivityIconColor(activity.type)} flex items-center justify-center flex-shrink-0`}>
+                    <span className="material-symbols-outlined text-white text-sm">
+                      {getActivityIcon(activity.type)}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-text-main">
+                      {activity.subject}
+                    </p>
+                    {activity.description && (
+                      <p className="text-sm text-text-muted mt-1">
+                        {activity.description}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-4 mt-2 text-xs text-text-muted">
+                      <span>{getRelativeTime(activity.activity_date)}</span>
+                      {activity.duration_minutes && (
+                        <span>{activity.duration_minutes} minutes</span>
+                      )}
+                      {activity.outcome && (
+                        <span className={`px-2 py-1 rounded-full ${
+                          activity.outcome === 'positive' ? 'bg-green-100 text-green-700' :
+                          activity.outcome === 'negative' ? 'bg-red-100 text-red-700' :
+                          'bg-slate-100 text-slate-700'
+                        }`}>
+                          {activity.outcome}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
 
-      {/* Modals */}
-      <DealSlideOver
-        isOpen={showEditDeal}
-        onClose={() => setShowEditDeal(false)}
+      <ActivityModal 
+        isOpen={showActivityModal}
+        onClose={() => setShowActivityModal(false)}
+        onSaved={() => {
+          setShowActivityModal(false);
+          fetchActivities();
+        }}
+        defaultDealId={dealId}
+        defaultContactId={contact?.id}
+      />
+
+      <DealSlideOver 
+        isOpen={showEditSlideOver}
+        onClose={() => setShowEditSlideOver(false)}
         deal={deal}
         onSaved={() => {
+          setShowEditSlideOver(false);
           fetchDeal();
-          setShowEditDeal(false);
         }}
       />
 
-      <ActivityModal
-        isOpen={showLogActivity}
-        onClose={() => setShowLogActivity(false)}
-        defaultDealId={deal.id}
-        onSaved={() => {
-          fetchActivities();
-          setShowLogActivity(false);
-        }}
-      />
-
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={handleDeleteDeal}
+      <ConfirmDialog 
+        isOpen={showDeleteDialog}
+        onClose={() => setShowDeleteDialog(false)}
+        onConfirm={handleDelete}
         title="Delete Deal"
-        message={`Are you sure you want to delete "${deal.name}"? This action cannot be undone.`}
-        confirmText="Delete Deal"
-        isLoading={isDeleting}
+        message={`Are you sure you want to delete ${deal.name}? This action cannot be undone.`}
+        confirmText={isDeleting ? "Deleting..." : "Delete"}
+        isDestructive
       />
     </div>
   );

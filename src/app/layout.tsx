@@ -1,13 +1,10 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import Sidebar from '@/components/Sidebar';
 
-const inter = Inter({ subsets: ['latin'] });
-
 export const metadata: Metadata = {
-  title: 'ContactHub - Sales CRM',
-  description: 'A modern, responsive CRM application for managing contacts, companies, and deals.',
+  title: 'ContactHub - University of Sydney AI Hub',
+  description: 'A modern CRM application for the University of Sydney AI Hub team.',
 };
 
 export default function RootLayout({
@@ -23,7 +20,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className={inter.className}>
+      <body className="font-sans">
         <div className="flex h-screen bg-background">
           <Sidebar />
           <main className="flex-1 ml-0 md:ml-64 overflow-auto">

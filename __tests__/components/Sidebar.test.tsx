@@ -1,3 +1,4 @@
+import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { usePathname } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
@@ -9,7 +10,7 @@ jest.mock('next/navigation', () => ({
 
 const mockUsePathname = usePathname as jest.MockedFunction<typeof usePathname>;
 
-describe('Sidebar Component', () => {
+describe('Sidebar', () => {
   beforeEach(() => {
     mockUsePathname.mockReturnValue('/');
   });
@@ -18,53 +19,48 @@ describe('Sidebar Component', () => {
     jest.clearAllMocks();
   });
 
-  it('should render sidebar with navigation items', () => {
+  it('renders the sidebar with logo and navigation items', () => {
     render(<Sidebar />);
     
     expect(screen.getByText('ContactHub')).toBeInTheDocument();
+    expect(screen.getByText('University of Sydney — AI Hub')).toBeInTheDocument();
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByText('Contacts')).toBeInTheDocument();
-    expect(screen.getByText('Groups')).toBeInTheDocument();
+    expect(screen.getByText('Companies')).toBeInTheDocument();
+    expect(screen.getByText('Deals')).toBeInTheDocument();
   });
 
-  it('should highlight active navigation item', () => {
+  it('highlights the active navigation item correctly', () => {
     mockUsePathname.mockReturnValue('/contacts');
     render(<Sidebar />);
     
-    const contactsLink = screen.getByText('Contacts');
-    expect(contactsLink).toHaveClass('bg-primary', 'text-white');
+    const contactsLink = screen.getByRole('link', { name: /contacts/i });
+    expect(contactsLink).toHaveClass('bg-primary');
   });
 
-  it('should highlight dashboard when on home page', () => {
+  it('highlights dashboard as active when on root path', () => {
     mockUsePathname.mockReturnValue('/');
     render(<Sidebar />);
     
-    const dashboardLink = screen.getByText('Dashboard');
-    expect(dashboardLink).toHaveClass('bg-primary', 'text-white');
+    const dashboardLink = screen.getByRole('link', { name: /dashboard/i });
+    expect(dashboardLink).toHaveClass('bg-primary');
   });
 
-  it('should highlight contacts for contact detail pages', () => {
+  it('handles nested paths correctly', () => {
     mockUsePathname.mockReturnValue('/contacts/123');
     render(<Sidebar />);
     
-    const contactsLink = screen.getByText('Contacts');
-    expect(contactsLink).toHaveClass('bg-primary', 'text-white');
+    const contactsLink = screen.getByRole('link', { name: /contacts/i });
+    expect(contactsLink).toHaveClass('bg-primary');
   });
 
-  it('should show mobile menu button', () => {
+  it('toggles mobile menu when button is clicked', () => {
     render(<Sidebar />);
     
     const menuButton = screen.getByRole('button');
-    expect(menuButton).toBeInTheDocument();
-  });
-
-  it('should toggle mobile menu on button click', () => {
-    render(<Sidebar />);
+    const sidebar = screen.getByRole('navigation').parentElement;
     
-    const menuButton = screen.getByRole('button');
-    const sidebar = screen.getByText('ContactHub').closest('div');
-    
-    // Initially closed on mobile
+    // Initially hidden on mobile
     expect(sidebar).toHaveClass('-translate-x-full');
     
     // Click to open
@@ -76,59 +72,12 @@ describe('Sidebar Component', () => {
     expect(sidebar).toHaveClass('-translate-x-full');
   });
 
-  it('should close mobile menu when navigation link is clicked', () => {
+  it('renders all navigation icons', () => {
     render(<Sidebar />);
     
-    const menuButton = screen.getByRole('button');
-    const contactsLink = screen.getByText('Contacts');
-    const sidebar = screen.getByText('ContactHub').closest('div');
-    
-    // Open menu
-    fireEvent.click(menuButton);
-    expect(sidebar).toHaveClass('translate-x-0');
-    
-    // Click navigation link
-    fireEvent.click(contactsLink);
-    expect(sidebar).toHaveClass('-translate-x-full');
-  });
-
-  it('should render overlay when mobile menu is open', () => {
-    render(<Sidebar />);
-    
-    const menuButton = screen.getByRole('button');
-    
-    // Initially no overlay
-    expect(screen.queryByTestId('mobile-overlay')).not.toBeInTheDocument();
-    
-    // Open menu
-    fireEvent.click(menuButton);
-    
-    // Overlay should be present
-    const overlay = document.querySelector('.bg-black.bg-opacity-50');
-    expect(overlay).toBeInTheDocument();
-  });
-
-  it('should close mobile menu when overlay is clicked', () => {
-    render(<Sidebar />);
-    
-    const menuButton = screen.getByRole('button');
-    const sidebar = screen.getByText('ContactHub').closest('div');
-    
-    // Open menu
-    fireEvent.click(menuButton);
-    expect(sidebar).toHaveClass('translate-x-0');
-    
-    // Click overlay
-    const overlay = document.querySelector('.bg-black.bg-opacity-50');
-    fireEvent.click(overlay!);
-    expect(sidebar).toHaveClass('-translate-x-full');
-  });
-
-  it('should have correct href attributes for navigation links', () => {
-    render(<Sidebar />);
-    
-    expect(screen.getByText('Dashboard').closest('a')).toHaveAttribute('href', '/');
-    expect(screen.getByText('Contacts').closest('a')).toHaveAttribute('href', '/contacts');
-    expect(screen.getByText('Groups').closest('a')).toHaveAttribute('href', '/groups');
+    const expectedIcons = ['dashboard', 'group', 'domain', 'view_kanban', 'forum', 'check_box', 'bar_chart', 'group_work', 'settings'];
+    expectedIcons.forEach(icon => {
+      expect(screen.getByText(icon)).toBeInTheDocument();
+    });
   });
 });

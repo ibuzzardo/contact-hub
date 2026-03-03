@@ -40,7 +40,7 @@ export default function Sidebar(): JSX.Element {
       </div>
 
       {/* Sidebar */}
-      <div className={`bg-surface-light w-64 h-full shadow-lg fixed top-0 left-0 flex flex-col z-40 border-r border-border-light transform transition-transform duration-300 ease-in-out ${
+      <div className={`bg-sandstone w-64 h-full shadow-lg fixed top-0 left-0 flex flex-col z-40 border-r border-border-light transform transition-transform duration-300 ease-in-out ${
         isOpen ? 'translate-x-0' : '-translate-x-full'
       } md:translate-x-0`}>
         {/* Logo */}
@@ -51,7 +51,7 @@ export default function Sidebar(): JSX.Element {
             </div>
             <div>
               <h1 className="text-xl font-bold text-text-main">ContactHub</h1>
-              <span className="text-xs text-text-muted">Sales CRM</span>
+              <span className="text-xs text-text-muted">University of Sydney — AI Hub</span>
             </div>
           </div>
         </div>
@@ -80,30 +80,20 @@ export default function Sidebar(): JSX.Element {
               );
             })}
           </ul>
-         
-          {/* Quick Actions */}
-          <div className="mt-8 pt-6 border-t border-border-light">
-            <div className="space-y-2">
-              <Link
-                href="/contacts/new"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center gap-3 px-4 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark transition-colors"
-              >
-                <span className="material-symbols-outlined text-xl">person_add</span>
-                New Contact
-              </Link>
-            </div>
-          </div>
         </nav>
+        
+        {/* New Contact Button */}
+        <div className="p-4 border-t border-border-light">
+          <Link
+            href="/contacts/new"
+            onClick={() => setIsOpen(false)}
+            className="w-full bg-primary hover:bg-primary-dark text-white px-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2 transition-colors shadow-sm shadow-primary/30"
+          >
+            <span className="material-symbols-outlined">add</span>
+            New Contact
+          </Link>
+        </div>
       </div>
-
-      {/* Mobile overlay */}
-      {isOpen && (
-        <div 
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
     </>
   );
 }

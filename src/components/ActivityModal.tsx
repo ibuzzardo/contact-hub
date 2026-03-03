@@ -99,213 +99,202 @@ export default function ActivityModal({ isOpen, onClose, onSaved, defaultDealId,
 
       if (response.ok) {
         onSaved();
-        onClose();
       }
     } catch (error) {
-      console.error('Error saving activity:', error);
+      console.error('Error creating activity:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const activityTypes = [
-    { key: 'call', label: 'Call', icon: 'phone' },
-    { key: 'email', label: 'Email', icon: 'email' },
-    { key: 'meeting', label: 'Meeting', icon: 'groups' },
-    { key: 'note', label: 'Note', icon: 'description' }
-  ];
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>): void => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-  const showDurationAndOutcome = formData.type === 'call' || formData.type === 'meeting';
-
-  if (!isOpen) return <></>;
+  if (!isOpen) return <div></div>;
 
   return (
-    <>
-      {/* Overlay */}
-      <div 
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-        onClick={onClose}
-      >
-        {/* Modal */}
-        <div 
-          className="bg-white rounded-xl shadow-2xl w-full max-w-[640px] max-h-[90vh] overflow-hidden"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-slate-200">
-            <h2 className="text-xl font-semibold text-slate-900">Log Activity</h2>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose} />
+      <div className="relative bg-surface-light rounded-xl border border-border-light p-6 max-w-md w-full mx-4 shadow-xl max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-text-main">Log Activity</h3>
+          <button
+            onClick={onClose}
+            className="text-text-muted hover:text-text-main transition-colors"
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Activity Type */}
+          <div>
+            <label htmlFor="type" className="block text-sm font-medium text-text-main mb-2">
+              Activity Type
+            </label>
+            <select
+              id="type"
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
             >
-              <span className="material-symbols-outlined text-slate-500">close</span>
-            </button>
+              <option value="call">Call</option>
+              <option value="email">Email</option>
+              <option value="meeting">Meeting</option>
+              <option value="note">Note</option>
+            </select>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="flex flex-col max-h-[calc(90vh-80px)]">
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
-              {/* Activity Type */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-3">
-                  Activity Type
-                </label>
-                <div className="grid grid-cols-4 gap-3">
-                  {activityTypes.map(type => (
-                    <button
-                      key={type.key}
-                      type="button"
-                      onClick={() => setFormData(prev => ({ ...prev, type: type.key as any }))}
-                      className={`p-4 rounded-lg border-2 transition-colors text-center ${
-                        formData.type === type.key
-                          ? 'border-blue-500 bg-blue-50 text-blue-700'
-                          : 'border-slate-200 hover:border-slate-300 text-slate-600'
-                      }`}
-                    >
-                      <span className="material-symbols-outlined text-2xl block mb-2">
-                        {type.icon}
-                      </span>
-                      <span className="text-sm font-medium">{type.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+          {/* Subject */}
+          <div>
+            <label htmlFor="subject" className="block text-sm font-medium text-text-main mb-2">
+              Subject *
+            </label>
+            <input
+              type="text"
+              id="subject"
+              name="subject"
+              value={formData.subject}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+              placeholder="Enter activity subject"
+              required
+            />
+          </div>
 
-              {/* Subject */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Subject *
-                </label>
-                <input
-                  type="text"
-                  value={formData.subject}
-                  onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Enter activity subject"
-                  required
-                />
-              </div>
+          {/* Contact */}
+          <div>
+            <label htmlFor="contact_id" className="block text-sm font-medium text-text-main mb-2">
+              Contact
+            </label>
+            <select
+              id="contact_id"
+              name="contact_id"
+              value={formData.contact_id}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+            >
+              <option value="">Select contact (optional)</option>
+              {contacts.map((contact) => (
+                <option key={contact.id} value={contact.id.toString()}>
+                  {contact.name} - {contact.email}
+                </option>
+              ))}
+            </select>
+          </div>
 
-              {/* Contact and Deal */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Contact
-                  </label>
-                  <select
-                    value={formData.contact_id}
-                    onChange={(e) => setFormData(prev => ({ ...prev, contact_id: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Select contact</option>
-                    {contacts.map(contact => (
-                      <option key={contact.id} value={contact.id}>
-                        {contact.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Deal
-                  </label>
-                  <select
-                    value={formData.deal_id}
-                    onChange={(e) => setFormData(prev => ({ ...prev, deal_id: e.target.value }))}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Select deal</option>
-                    {deals.map(deal => (
-                      <option key={deal.id} value={deal.id}>
-                        {deal.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+          {/* Deal */}
+          <div>
+            <label htmlFor="deal_id" className="block text-sm font-medium text-text-main mb-2">
+              Deal
+            </label>
+            <select
+              id="deal_id"
+              name="deal_id"
+              value={formData.deal_id}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+            >
+              <option value="">Select deal (optional)</option>
+              {deals.map((deal) => (
+                <option key={deal.id} value={deal.id.toString()}>
+                  {deal.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-              {/* Date & Time */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Date & Time
-                </label>
-                <input
-                  type="datetime-local"
-                  value={formData.activity_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, activity_date: e.target.value }))}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
+          {/* Activity Date */}
+          <div>
+            <label htmlFor="activity_date" className="block text-sm font-medium text-text-main mb-2">
+              Date & Time
+            </label>
+            <input
+              type="datetime-local"
+              id="activity_date"
+              name="activity_date"
+              value={formData.activity_date}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+            />
+          </div>
 
-              {/* Duration and Outcome (conditional) */}
-              {showDurationAndOutcome && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Duration (minutes)
-                    </label>
-                    <input
-                      type="number"
-                      value={formData.duration_minutes}
-                      onChange={(e) => setFormData(prev => ({ ...prev, duration_minutes: e.target.value }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="30"
-                      min="1"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Outcome
-                    </label>
-                    <select
-                      value={formData.outcome}
-                      onChange={(e) => setFormData(prev => ({ ...prev, outcome: e.target.value as any }))}
-                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Select outcome</option>
-                      <option value="positive">Positive</option>
-                      <option value="neutral">Neutral</option>
-                      <option value="negative">Negative</option>
-                    </select>
-                  </div>
-                </div>
-              )}
-
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Notes/Description
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  rows={4}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Add notes about this activity..."
-                />
-              </div>
+          {/* Duration */}
+          {(formData.type === 'call' || formData.type === 'meeting') && (
+            <div>
+              <label htmlFor="duration_minutes" className="block text-sm font-medium text-text-main mb-2">
+                Duration (minutes)
+              </label>
+              <input
+                type="number"
+                id="duration_minutes"
+                name="duration_minutes"
+                value={formData.duration_minutes}
+                onChange={handleChange}
+                min="1"
+                className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                placeholder="30"
+              />
             </div>
+          )}
 
-            {/* Footer */}
-            <div className="flex items-center justify-end gap-3 p-6 border-t border-slate-200">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 text-slate-700 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isLoading || !formData.subject.trim()}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isLoading ? 'Saving...' : 'Save Activity'}
-              </button>
-            </div>
-          </form>
-        </div>
+          {/* Outcome */}
+          <div>
+            <label htmlFor="outcome" className="block text-sm font-medium text-text-main mb-2">
+              Outcome
+            </label>
+            <select
+              id="outcome"
+              name="outcome"
+              value={formData.outcome}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+            >
+              <option value="">Select outcome (optional)</option>
+              <option value="positive">Positive</option>
+              <option value="neutral">Neutral</option>
+              <option value="negative">Negative</option>
+            </select>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label htmlFor="description" className="block text-sm font-medium text-text-main mb-2">
+              Description
+            </label>
+            <textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows={3}
+              className="w-full px-4 py-2 border border-border-light rounded-lg bg-surface-light text-text-main focus:ring-2 focus:ring-primary focus:border-primary transition-colors resize-none"
+              placeholder="Add details about this activity..."
+            />
+          </div>
+
+          {/* Form Actions */}
+          <div className="flex justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-text-muted hover:bg-slate-100 rounded-lg transition-colors font-medium"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isLoading || !formData.subject.trim()}
+              className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg font-medium transition-colors shadow-sm shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? 'Saving...' : 'Log Activity'}
+            </button>
+          </div>
+        </form>
       </div>
-    </>
+    </div>
   );
 }

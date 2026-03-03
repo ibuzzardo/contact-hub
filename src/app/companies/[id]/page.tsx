@@ -1,42 +1,39 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Company, Contact, Deal } from '@/types';
 import Header from '@/components/Header';
-import Avatar from '@/components/Avatar';
+import ContactCard from '@/components/ContactCard';
+import { getRelativeTime } from '@/lib/utils';
 
-interface CompanyDetailPageProps {
-  params: Promise<{ id: string }>;
-}
-
-export default function CompanyDetailPage({ params }: CompanyDetailPageProps): JSX.Element {
+export default function CompanyDetailPage(): JSX.Element {
+  const params = useParams();
+  const router = useRouter();
+  const companyId = parseInt(params.id as string);
+  
   const [company, setCompany] = useState<Company | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [deals, setDeals] = useState<Deal[]>([]);
-  const [activeTab, setActiveTab] = useState('contacts');
   const [isLoading, setIsLoading] = useState(true);
-  const [companyId, setCompanyId] = useState<number | null>(null);
 
   useEffect(() => {
-    const getParams = async (): Promise<void> => {
-      const resolvedParams = await params;
-      const id = parseInt(resolvedParams.id);
-      setCompanyId(id);
-      if (!isNaN(id)) {
-        fetchCompany(id);
-        fetchContacts(id);
-        fetchDeals(id);
-      }
-    };
-    getParams();
-  }, [params]);
+    if (companyId) {
+      fetchCompany();
+      fetchContacts();
+      fetchDeals();
+    }
+  }, [companyId]);
 
-  const fetchCompany = async (id: number): Promise<void> => {
+  const fetchCompany = async (): Promise<void> => {
     try {
-      const response = await fetch(`/api/companies/${id}`);
+      const response = await fetch(`/api/companies/${companyId}`);
       if (response.ok) {
         const data = await response.json();
         setCompany(data);
+      } else if (response.status === 404) {
+        router.push('/companies');
       }
     } catch (error) {
       console.error('Error fetching company:', error);
@@ -45,9 +42,9 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps): J
     }
   };
 
-  const fetchContacts = async (id: number): Promise<void> => {
+  const fetchContacts = async (): Promise<void> => {
     try {
-      const response = await fetch(`/api/contacts?company_id=${id}`);
+      const response = await fetch(`/api/contacts?company=${encodeURIComponent(company?.name || '')}`);
       if (response.ok) {
         const data = await response.json();
         setContacts(data.contacts || []);
@@ -57,9 +54,9 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps): J
     }
   };
 
-  const fetchDeals = async (id: number): Promise<void> => {
+  const fetchDeals = async (): Promise<void> => {
     try {
-      const response = await fetch(`/api/deals?company_id=${id}`);
+      const response = await fetch(`/api/deals?company_id=${companyId}`);
       if (response.ok) {
         const data = await response.json();
         setDeals(data || []);
@@ -69,8 +66,16 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps): J
     }
   };
 
-  const getInitials = (name: string): string => {
-    return name.split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2);
+  const getStageColor = (stage: string): string => {
+    switch (stage) {
+      case 'lead': return 'bg-stage-lead';
+      case 'qualified': return 'bg-stage-qualified';
+      case 'proposal': return 'bg-stage-proposal';
+      case 'negotiation': return 'bg-stage-negotiation';
+      case 'won': return 'bg-stage-won';
+      case 'lost': return 'bg-stage-lost';
+      default: return 'bg-slate-500';
+    }
   };
 
   const formatCurrency = (amount: number): string => {
@@ -85,10 +90,10 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps): J
   if (isLoading) {
     return (
       <div className="flex-1">
-        <Header title="Loading..." />
+        <Header title="Loading..." subtitle="" />
         <div className="p-6">
           <div className="flex items-center justify-center h-64">
-            <div className="text-text-muted">Loading company details...</div>
+            <div className="text-text-muted">Loading company...</div>
           </div>
         </div>
       </div>
@@ -98,10 +103,16 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps): J
   if (!company) {
     return (
       <div className="flex-1">
-        <Header title="Company Not Found" />
+        <Header title="Company Not Found" subtitle="" />
         <div className="p-6">
           <div className="text-center">
-            <div className="text-text-muted">The requested company could not be found.</div>
+            <p className="text-text-muted mb-4">The company you're looking for doesn't exist.</p>
+            <Link 
+              href="/companies"
+              className="text-primary hover:text-primary-dark font-medium"
+            >
+              Back to Companies
+            </Link>
           </div>
         </div>
       </div>
@@ -110,204 +121,167 @@ export default function CompanyDetailPage({ params }: CompanyDetailPageProps): J
 
   return (
     <div className="flex-1">
-      <Header title={company.name}>
-        <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors">
-            <span className="material-symbols-outlined text-base">edit</span>
-            Edit Profile
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors">
-            <span className="material-symbols-outlined text-base">more_vert</span>
-            More Actions
-          </button>
-        </div>
-      </Header>
-
-      <div className="p-6">
-        {/* Company Header */}
-        <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="w-16 h-16 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xl">
-              {getInitials(company.name)}
+      <Header 
+        title={company.name}
+        subtitle={company.industry || 'Company Details'}
+      />
+      
+      <div className="p-6 space-y-8">
+        {/* Company Info */}
+        <div className="bg-surface-light rounded-xl border border-border-light p-6">
+          <div className="flex items-start gap-6">
+            <div className="w-16 h-16 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+              <span className="material-symbols-outlined text-primary text-2xl">domain</span>
             </div>
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-text-main">{company.name}</h1>
-                <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
-                  Active Client
-                </span>
-              </div>
-              <div className="flex items-center gap-4 text-sm text-text-muted">
+            
+            <div className="flex-1 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {company.industry && (
+                  <div>
+                    <label className="text-sm font-medium text-text-muted">Industry</label>
+                    <p className="text-text-main mt-1">{company.industry}</p>
+                  </div>
+                )}
+                
                 {company.website && (
-                  <a href={company.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary">
-                    <span className="material-symbols-outlined text-base">link</span>
-                    Website
-                  </a>
+                  <div>
+                    <label className="text-sm font-medium text-text-muted">Website</label>
+                    <div className="mt-1">
+                      <a 
+                        href={company.website.startsWith('http') ? company.website : `https://${company.website}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:text-primary-dark transition-colors flex items-center gap-1"
+                      >
+                        {company.website}
+                        <span className="material-symbols-outlined text-sm">open_in_new</span>
+                      </a>
+                    </div>
+                  </div>
                 )}
+                
                 {company.phone && (
-                  <a href={`tel:${company.phone}`} className="flex items-center gap-1 hover:text-primary">
-                    <span className="material-symbols-outlined text-base">call</span>
-                    {company.phone}
-                  </a>
+                  <div>
+                    <label className="text-sm font-medium text-text-muted">Phone</label>
+                    <div className="mt-1">
+                      <a 
+                        href={`tel:${company.phone}`}
+                        className="text-primary hover:text-primary-dark transition-colors"
+                      >
+                        {company.phone}
+                      </a>
+                    </div>
+                  </div>
+                )}
+                
+                {company.address && (
+                  <div>
+                    <label className="text-sm font-medium text-text-muted">Address</label>
+                    <p className="text-text-main mt-1">{company.address}</p>
+                  </div>
                 )}
               </div>
-            </div>
-          </div>
-
-          {/* Metrics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-slate-50 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="material-symbols-outlined text-blue-500">group</span>
-                <span className="text-sm font-medium text-text-muted">Total Contacts</span>
-              </div>
-              <div className="text-2xl font-bold text-text-main">{company.contact_count || 0}</div>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="material-symbols-outlined text-amber-500">folder_open</span>
-                <span className="text-sm font-medium text-text-muted">Open Deals</span>
-              </div>
-              <div className="text-2xl font-bold text-text-main">{company.open_deal_count || 0}</div>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="material-symbols-outlined text-green-500">attach_money</span>
-                <span className="text-sm font-medium text-text-muted">Lifetime Value</span>
-              </div>
-              <div className="text-2xl font-bold text-text-main">{formatCurrency(company.total_deal_value || 0)}</div>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="material-symbols-outlined text-purple-500">schedule</span>
-                <span className="text-sm font-medium text-text-muted">Last Activity</span>
-              </div>
-              <div className="text-2xl font-bold text-text-main">2d ago</div>
+              
+              {company.description && (
+                <div>
+                  <label className="text-sm font-medium text-text-muted">Description</label>
+                  <p className="text-text-main mt-1 whitespace-pre-wrap">{company.description}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="bg-white rounded-xl border border-slate-200">
-          <div className="border-b border-slate-200">
-            <nav className="flex space-x-8 px-6">
-              {[
-                { key: 'contacts', label: 'Contacts', icon: 'group' },
-                { key: 'deals', label: 'Deals', icon: 'handshake' },
-                { key: 'activities', label: 'Activities', icon: 'timeline' },
-                { key: 'notes', label: 'Notes', icon: 'note' },
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    activeTab === tab.key
-                      ? 'border-primary text-primary'
-                      : 'border-transparent text-text-muted hover:text-text-main hover:border-slate-300'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-base">{tab.icon}</span>
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Company Contacts */}
+          <div className="bg-surface-light rounded-xl border border-border-light p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-text-main">Contacts</h3>
+              <Link 
+                href={`/contacts/new?company=${encodeURIComponent(company.name)}`}
+                className="text-primary hover:text-primary-dark text-sm font-medium transition-colors"
+              >
+                Add Contact
+              </Link>
+            </div>
+            
+            <div className="space-y-4">
+              {contacts.length === 0 ? (
+                <p className="text-text-muted text-center py-8">No contacts yet</p>
+              ) : (
+                contacts.slice(0, 6).map((contact) => (
+                  <div key={contact.id} className="flex items-center gap-3 p-3 border border-border-light rounded-lg hover:shadow-md transition-shadow">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-primary">person</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <Link 
+                        href={`/contacts/${contact.id}`}
+                        className="font-medium text-text-main hover:text-primary transition-colors"
+                      >
+                        {contact.name}
+                      </Link>
+                      {contact.job_title && (
+                        <p className="text-sm text-text-muted">{contact.job_title}</p>
+                      )}
+                      <p className="text-sm text-text-muted">{contact.email}</p>
+                    </div>
+                  </div>
+                ))
+              )}
+              
+              {contacts.length > 6 && (
+                <div className="text-center pt-4">
+                  <Link 
+                    href={`/contacts?company=${encodeURIComponent(company.name)}`}
+                    className="text-primary hover:text-primary-dark text-sm font-medium transition-colors"
+                  >
+                    View all {contacts.length} contacts
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="p-6">
-            {activeTab === 'contacts' && (
-              <div>
-                {contacts.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {contacts.map((contact) => (
-                      <div key={contact.id} className="bg-slate-50 rounded-lg p-4">
-                        <div className="flex items-center gap-3 mb-3">
-                          <Avatar name={contact.name} size="sm" />
-                          <div>
-                            <div className="font-medium text-text-main">{contact.name}</div>
-                            {contact.job_title && (
-                              <div className="text-sm text-text-muted">{contact.job_title}</div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="space-y-1 text-sm text-text-muted">
-                          <div className="flex items-center gap-2">
-                            <span className="material-symbols-outlined text-base">mail</span>
-                            {contact.email}
-                          </div>
-                          {contact.phone && (
-                            <div className="flex items-center gap-2">
-                              <span className="material-symbols-outlined text-base">call</span>
-                              {contact.phone}
-                            </div>
-                          )}
-                        </div>
+          {/* Company Deals */}
+          <div className="bg-surface-light rounded-xl border border-border-light p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-semibold text-text-main">Deals</h3>
+              <Link 
+                href="/deals"
+                className="text-primary hover:text-primary-dark text-sm font-medium transition-colors"
+              >
+                View All
+              </Link>
+            </div>
+            
+            <div className="space-y-4">
+              {deals.length === 0 ? (
+                <p className="text-text-muted text-center py-8">No deals yet</p>
+              ) : (
+                deals.slice(0, 5).map((deal) => (
+                  <Link key={deal.id} href={`/deals/${deal.id}`}>
+                    <div className="p-4 border border-border-light rounded-lg hover:shadow-md transition-shadow cursor-pointer">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-text-main">{deal.name}</h4>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full text-white ${getStageColor(deal.stage)}`}>
+                          {deal.stage.replace('_', ' ')}
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">group</span>
-                    <div className="text-text-muted">No contacts found for this company.</div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'deals' && (
-              <div>
-                {deals.length > 0 ? (
-                  <div className="space-y-4">
-                    {deals.map((deal) => (
-                      <div key={deal.id} className="bg-slate-50 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <h3 className="font-medium text-text-main">{deal.name}</h3>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            deal.stage === 'closed_won' ? 'bg-green-100 text-green-700' :
-                            deal.stage === 'closed_lost' ? 'bg-red-100 text-red-700' :
-                            'bg-blue-100 text-blue-700'
-                          }`}>
-                            {deal.stage.replace('_', ' ').toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm text-text-muted">
-                          <span>{formatCurrency(deal.value)}</span>
-                          {deal.expected_close && (
-                            <span>Expected: {new Date(deal.expected_close).toLocaleDateString()}</span>
-                          )}
-                        </div>
+                      <div className="flex items-center justify-between text-sm text-text-muted">
+                        <span>{formatCurrency(deal.value)}</span>
+                        <span>{deal.probability}% probability</span>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">handshake</span>
-                    <div className="text-text-muted">No deals found for this company.</div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'activities' && (
-              <div className="text-center py-8">
-                <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">timeline</span>
-                <div className="text-text-muted">Activity tracking coming soon.</div>
-              </div>
-            )}
-
-            {activeTab === 'notes' && (
-              <div>
-                {company.notes ? (
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <p className="text-text-main whitespace-pre-wrap">{company.notes}</p>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <span className="material-symbols-outlined text-4xl text-slate-300 mb-2">note</span>
-                    <div className="text-text-muted">No notes added for this company.</div>
-                  </div>
-                )}
-              </div>
-            )}
+                      {deal.expected_close && (
+                        <p className="text-xs text-text-muted mt-1">
+                          Expected close: {getRelativeTime(deal.expected_close)}
+                        </p>
+                      )}
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { Contact } from '@/types';
-import Avatar from './Avatar';
-import GroupBadge from './GroupBadge';
+import Avatar from '@/components/Avatar';
+import GroupBadge from '@/components/GroupBadge';
 import { useState } from 'react';
 
 interface ContactCardProps {
@@ -83,16 +83,16 @@ export default function ContactCard({ contact, groupName, onFavoriteToggle }: Co
                 <span>{contact.phone}</span>
               </div>
             )}
+            
+            {groupName && (
+              <div className="flex justify-center mt-2">
+                <span className="px-2 py-1 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                  {groupName}
+                </span>
+              </div>
+            )}
           </div>
-          
-          {groupName && (
-            <div className="mt-3">
-              <GroupBadge name={groupName} />
-            </div>
-          )}
         </div>
-        
-        <div className="absolute inset-x-0 bottom-0 h-1 bg-primary rounded-b-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
       </div>
     </Link>
   );
